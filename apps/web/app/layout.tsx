@@ -1,19 +1,19 @@
 import type { Metadata } from "next";
-import { Instrument_Sans, Instrument_Serif } from "next/font/google";
+import { DM_Sans, DM_Mono } from "next/font/google";
+import { Providers } from "./providers";
 import "./globals.css";
 
-const instrumentSans = Instrument_Sans({
+const dmSans = DM_Sans({
   subsets: ["latin"],
   weight: ["400", "500", "600"],
-  variable: "--font-instrument-sans",
+  variable: "--font-dm-sans",
   display: "swap",
 });
 
-const instrumentSerif = Instrument_Serif({
+const dmMono = DM_Mono({
   subsets: ["latin"],
-  weight: ["400"],
-  style: ["normal", "italic"],
-  variable: "--font-instrument-serif",
+  weight: ["400", "500"],
+  variable: "--font-dm-mono",
   display: "swap",
 });
 
@@ -24,9 +24,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${instrumentSans.variable} ${instrumentSerif.variable}`}>
+    <html lang="en" className={`${dmSans.variable} ${dmMono.variable}`}>
       <body style={{ margin: 0 }}>
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

@@ -1,19 +1,30 @@
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap');
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; font-family: inherit; }
 
-/* Letters emerge from behind neighbour to their Figma position (already 40px apart) */
-@keyframes pinch-emerge {
-  from { transform: translateX(var(--emerge-x, 0)); opacity: 0; }
-  to   { transform: translateX(0); opacity: 1; }
+/* Per-letter emerge: start at neighbour's position, slide to own position */
+@keyframes emerge-p {
+  from { transform: translateX(140px);  opacity: 0; }
+  to   { transform: translateX(0);      opacity: 1; }
+}
+@keyframes emerge-i {
+  from { transform: translateX(90px);   opacity: 0; }
+  to   { transform: translateX(0);      opacity: 1; }
+}
+@keyframes emerge-c {
+  from { transform: translateX(-136px); opacity: 0; }
+  to   { transform: translateX(0);      opacity: 1; }
+}
+@keyframes emerge-h {
+  from { transform: translateX(-128px); opacity: 0; }
+  to   { transform: translateX(0);      opacity: 1; }
 }
 
-/* After emerge, compress 40px gaps down to 10px by shifting inward */
-@keyframes pinch-compress {
-  from { transform: translateX(0); }
-  to   { transform: translateX(var(--compress-x, 0)); }
-}
-
+/* Per-letter compress: close the 40px gaps to 10px */
+@keyframes compress-p { from { transform: translateX(0); } to { transform: translateX(60px);  } }
+@keyframes compress-i { from { transform: translateX(0); } to { transform: translateX(30px);  } }
+@keyframes compress-c { from { transform: translateX(0); } to { transform: translateX(-30px); } }
+@keyframes compress-h { from { transform: translateX(0); } to { transform: translateX(-60px); } }
 
 @keyframes coin-flip {
   from { transform: rotateY(0deg); }
@@ -22,19 +33,42 @@
 
 
 html, body {
-  background: #ffeedd;
-  color: #242424;
-  font-family: var(--font-instrument-sans), 'Instrument Sans', sans-serif;
+  background-color: #112211;
+  background-image:
+    linear-gradient(rgba(170,204,187,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(170,204,187,0.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+  color: #aaccbb;
+  font-family: 'DM Sans', sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
 :root {
-  --bg: #0a0a0a;
-  --card: #141414;
-  --card-hover: #1c1c1c;
-  --border: rgba(255,255,255,0.09);
-  --border-hover: rgba(255,255,255,0.18);
-  --muted: rgba(255,255,255,0.35);
+  --bg: #112211;
+  --accent: #44aa66;
+  --text: #aaccbb;
+  --card: #172e17;
+  --card-hover: #1c341c;
+  --border: rgba(170,204,187,0.09);
+  --border-hover: rgba(170,204,187,0.18);
+  --muted: rgba(170,204,187,0.35);
   --radius-card: 18px;
   --radius-pill: 999px;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  padding: 0 24px 80px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+@media (min-width: 640px) {
+  .card-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (min-width: 1024px) {
+  .card-grid { grid-template-columns: repeat(3, 1fr); }
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useLayoutEffect, useEffect, CSSProperties } from "react";
+import { UserPill } from "@privy-io/react-auth/ui";
 import { GlassesViewer } from "./GlassesViewer";
 
 type Tab = "bounties" | "sidequests";
@@ -29,15 +30,19 @@ const SIDE_QUESTS: Item[] = [
   { id: "robo6", amount: "60 USDC", label: "Befriend pigeon" },
 ];
 
-const BG = "#ffeedd";
-const TEXT = "#242424";
+const BG = "#112211";
+const TEXT = "#aaccbb";
+const ACCENT = "#44aa66";
+const MESH = `linear-gradient(rgba(170,204,187,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(170,204,187,0.05) 1px, transparent 1px)`;
 
 const s: Record<string, CSSProperties> = {
   page: {
     minHeight: "100vh",
-    background: BG,
+    backgroundColor: BG,
+    backgroundImage: MESH,
+    backgroundSize: "40px 40px",
     color: TEXT,
-    fontFamily: "var(--font-instrument-sans), sans-serif",
+    fontFamily: "'DM Sans', sans-serif",
   },
   header: {
     position: "fixed",
@@ -47,16 +52,18 @@ const s: Record<string, CSSProperties> = {
     alignItems: "center",
     justifyContent: "space-between",
     padding: "20px 28px",
-    background: BG,
+    backgroundColor: "rgba(17,34,17,0.85)",
+    backdropFilter: "blur(12px)",
+    WebkitBackdropFilter: "blur(12px)",
   },
   infoBtn: {
     width: 42, height: 42,
     borderRadius: "50%",
-    border: "1px solid rgba(36,36,36,0.25)",
+    border: "1px solid rgba(170,204,187,0.25)",
     background: "transparent",
-    color: "rgba(36,36,36,0.5)",
+    color: "rgba(170,204,187,0.5)",
     fontSize: 16,
-    fontFamily: "var(--font-instrument-sans), sans-serif",
+    fontFamily: "'DM Mono', monospace",
     cursor: "pointer",
     display: "flex",
     alignItems: "center",
@@ -67,11 +74,11 @@ const s: Record<string, CSSProperties> = {
     height: 42,
     padding: "0 20px",
     borderRadius: 999,
-    border: "1px solid rgba(36,36,36,0.25)",
+    border: "1px solid rgba(170,204,187,0.25)",
     background: "transparent",
-    color: "rgba(36,36,36,0.65)",
+    color: "rgba(170,204,187,0.65)",
     fontSize: 14,
-    fontFamily: "var(--font-instrument-sans), sans-serif",
+    fontFamily: "'DM Mono', monospace",
     fontWeight: 500,
     cursor: "pointer",
     letterSpacing: "-0.01em",
@@ -84,8 +91,7 @@ const s: Record<string, CSSProperties> = {
     userSelect: "none",
   },
   title: {
-    fontFamily: "var(--font-instrument-serif), serif",
-    fontStyle: "italic",
+    fontFamily: "'DM Sans', sans-serif",
     fontSize: "clamp(72px, 14vw, 160px)",
     lineHeight: 1,
     letterSpacing: "-0.04em",
@@ -94,7 +100,7 @@ const s: Record<string, CSSProperties> = {
   },
   subtitle: {
     marginTop: 10,
-    color: "rgba(36,36,36,0.4)",
+    color: "rgba(170,204,187,0.4)",
     fontSize: 13,
     letterSpacing: "0.04em",
   },
@@ -107,8 +113,8 @@ const s: Record<string, CSSProperties> = {
     display: "inline-flex",
     alignItems: "center",
     position: "relative",
-    background: "rgba(36,36,36,0.06)",
-    border: "1px solid rgba(36,36,36,0.12)",
+    background: "rgba(170,204,187,0.06)",
+    border: "1px solid rgba(170,204,187,0.12)",
     borderRadius: 999,
     padding: 4,
   },
@@ -117,7 +123,7 @@ const s: Record<string, CSSProperties> = {
     top: 4,
     height: "calc(100% - 8px)",
     borderRadius: 999,
-    background: TEXT,
+    background: ACCENT,
     pointerEvents: "none",
   },
   tabBtn: {
@@ -130,22 +136,14 @@ const s: Record<string, CSSProperties> = {
     cursor: "pointer",
     fontSize: 14,
     fontWeight: 500,
-    fontFamily: "var(--font-instrument-sans), sans-serif",
+    fontFamily: "'DM Mono', monospace",
     letterSpacing: "-0.01em",
     transition: "color 0.25s",
     whiteSpace: "nowrap",
   },
-  grid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
-    gap: 12,
-    padding: "0 24px 80px",
-    maxWidth: 1100,
-    margin: "0 auto",
-  },
   card: {
-    background: "#fff8f2",
-    border: "1px solid rgba(36,36,36,0.1)",
+    background: "rgba(170,204,187,0.04)",
+    border: "1px solid rgba(170,204,187,0.1)",
     borderRadius: 18,
     overflow: "hidden",
     cursor: "pointer",
@@ -156,7 +154,7 @@ const s: Record<string, CSSProperties> = {
   cardImg: {
     width: "100%",
     aspectRatio: "4/3",
-    background: "linear-gradient(135deg, #f5e8d8 0%, #efe0cc 100%)",
+    background: "linear-gradient(135deg, rgba(68,170,102,0.12) 0%, rgba(68,170,102,0.06) 100%)",
     display: "block",
   },
   cardBody: {
@@ -174,13 +172,14 @@ const s: Record<string, CSSProperties> = {
   },
   cardSub: {
     fontSize: 12,
-    color: "rgba(36,36,36,0.4)",
+    color: "rgba(170,204,187,0.4)",
     marginTop: 2,
   },
   cardAmount: {
     fontSize: 14,
-    fontWeight: 600,
-    color: TEXT,
+    fontWeight: 500,
+    color: ACCENT,
+    fontFamily: "'DM Mono', monospace",
     letterSpacing: "-0.02em",
     fontVariantNumeric: "tabular-nums",
     flexShrink: 0,
@@ -189,8 +188,8 @@ const s: Record<string, CSSProperties> = {
     display: "inline-block",
     fontSize: 11,
     fontWeight: 500,
-    color: "rgba(36,36,36,0.4)",
-    border: "1px solid rgba(36,36,36,0.15)",
+    color: "rgba(170,204,187,0.4)",
+    border: "1px solid rgba(170,204,187,0.15)",
     borderRadius: 999,
     padding: "2px 8px",
     marginBottom: 4,
@@ -200,7 +199,7 @@ const s: Record<string, CSSProperties> = {
     position: "fixed",
     inset: 0,
     zIndex: 50,
-    background: "rgba(36,36,36,0.4)",
+    background: "rgba(10,20,10,0.7)",
     backdropFilter: "blur(8px)",
     WebkitBackdropFilter: "blur(8px)",
     display: "flex",
@@ -209,8 +208,8 @@ const s: Record<string, CSSProperties> = {
     padding: 24,
   },
   modal: {
-    background: "#fff8f2",
-    border: "1px solid rgba(36,36,36,0.1)",
+    background: "#172e17",
+    border: "1px solid rgba(170,204,187,0.1)",
     borderRadius: 24,
     width: "100%",
     maxWidth: 420,
@@ -223,20 +222,20 @@ const s: Record<string, CSSProperties> = {
     width: 32, height: 32,
     borderRadius: "50%",
     border: "none",
-    background: "rgba(36,36,36,0.07)",
-    color: "rgba(36,36,36,0.45)",
+    background: "rgba(170,204,187,0.07)",
+    color: "rgba(170,204,187,0.45)",
     fontSize: 16,
     cursor: "pointer",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     zIndex: 1,
-    fontFamily: "var(--font-instrument-sans), sans-serif",
+    fontFamily: "'DM Sans', sans-serif",
   },
   modalCanvas: {
     width: "100%",
     height: 280,
-    background: "#f5e8d8",
+    background: "#1c341c",
     display: "block",
   },
   modalInfo: {
@@ -250,7 +249,7 @@ const s: Record<string, CSSProperties> = {
   },
   modalMeta: {
     fontSize: 13,
-    color: "rgba(36,36,36,0.4)",
+    color: "rgba(170,204,187,0.4)",
     marginTop: 4,
     letterSpacing: "-0.01em",
   },
@@ -264,11 +263,11 @@ const s: Record<string, CSSProperties> = {
     height: 44,
     borderRadius: 999,
     border: "none",
-    background: TEXT,
+    background: ACCENT,
     color: BG,
     fontSize: 14,
     fontWeight: 600,
-    fontFamily: "var(--font-instrument-sans), sans-serif",
+    fontFamily: "'DM Sans', sans-serif",
     cursor: "pointer",
     letterSpacing: "-0.01em",
   },
@@ -276,12 +275,12 @@ const s: Record<string, CSSProperties> = {
     height: 44,
     padding: "0 20px",
     borderRadius: 999,
-    border: "1px solid rgba(36,36,36,0.15)",
+    border: "1px solid rgba(170,204,187,0.15)",
     background: "transparent",
-    color: "rgba(36,36,36,0.45)",
+    color: "rgba(170,204,187,0.45)",
     fontSize: 14,
     fontWeight: 500,
-    fontFamily: "var(--font-instrument-sans), sans-serif",
+    fontFamily: "'DM Sans', sans-serif",
     cursor: "pointer",
     letterSpacing: "-0.01em",
   },
@@ -302,118 +301,228 @@ const LETTERS = [
 ];
 
 const EMERGE_DUR_S     = 0.45;
-const STEP_S           = 0.15;
+const STEP_S           = 0.1;
 const PAUSE_S          = 0.2;
 const LAST_END_S       = 0.1 + STEP_S + EMERGE_DUR_S;
 const COMPRESS_START_S = LAST_END_S + PAUSE_S;
 const COMPRESS_DUR_S   = 0.4;
 const FLIP_DUR_S       = 0.35;
-const FLIP_START_S     = COMPRESS_START_S + COMPRESS_DUR_S / 2;
+const FLIP_START_S     = COMPRESS_START_S;
 
 function PinchTitle() {
   return (
-    <div style={{ display: "flex", justifyContent: "center" }}>
-      <div style={{ position: "relative", width: FIGMA_W, height: FIGMA_H, filter: "invert(1)" }}>
-        {LETTERS.map((letter, i) => {
-          const isN     = letter.dist === 0;
-          const isC     = letter.alt === "c";
-          const delay   = isN ? 0 : 0.1 + (letter.dist - 1) * STEP_S;
-          const emergeX = letter.neighbourLeft - letter.left;
-          const vars    = {
-            ["--emerge-x"   as string]: `${emergeX}px`,
-            ["--compress-x" as string]: `${letter.compressX}px`,
+    <div style={{ display: "flex", justifyContent: "center", width: "100%" }}>
+      <div style={{ position: "relative", width: FIGMA_W, height: FIGMA_H, transform: "scale(0.48)", transformOrigin: "center", marginTop: -FIGMA_H * 0.26, marginBottom: -FIGMA_H * 0.26, marginLeft: -(FIGMA_W * 0.26), marginRight: -(FIGMA_W * 0.26) }}>
+        {LETTERS.map((letter) => {
+          const isN   = letter.dist === 0;
+          const isC   = letter.alt === "c";
+          const delay = isN ? 0 : 0.1 + (letter.dist - 1) * STEP_S;
+
+          // Absolute slot — never has animations so layout never shifts
+          const slotStyle: CSSProperties = {
+            position: "absolute",
+            left: letter.left,
+            top: letter.top,
+            width: letter.w,
+            height: letter.h,
           };
 
+          if (isN) {
+            // n: visible from the start, doesn't move (compressX = 0)
+            return (
+              <div key="n" style={slotStyle}>
+                <img src={letter.src} alt="n" style={{ display: "block" }} />
+              </div>
+            );
+          }
+
           if (isC) {
-            // Outer div: positioned at c's Figma slot, handles emerge + compress translation
-            // Inner coin wrapper: handles the rotateY flip with preserve-3d
-            // Front: c.png, Back: pinch.png (pre-rotated 180deg) — both backface-hidden
+            // emerge wrapper  → translate from n's position, fades in
+            // compress wrapper → translate inward (separate element = no transform conflict)
+            // coin wrapper    → rotateY flip (preserve-3d)
             return (
               <div
                 key="c"
                 style={{
-                  ...vars,
-                  position: "absolute",
-                  left: letter.left,
-                  top: letter.top,
-                  width: letter.w,
-                  height: letter.h,
+                  ...slotStyle,
                   opacity: 0,
-                  animation: [
-                    `pinch-emerge ${EMERGE_DUR_S}s cubic-bezier(0.22,1,0.36,1) ${delay}s both`,
-                    `pinch-compress ${COMPRESS_DUR_S}s ease-in-out ${COMPRESS_START_S}s both`,
-                  ].join(", "),
-                  perspective: "600px",
+                  animation: `emerge-c ${EMERGE_DUR_S}s cubic-bezier(0.22,1,0.36,1) ${delay}s both`,
                 } as CSSProperties}
               >
-                {/* coin wrapper — handles only the rotateY flip */}
                 <div style={{
-                  position: "relative",
                   width: "100%",
                   height: "100%",
-                  transformStyle: "preserve-3d",
-                  animation: `coin-flip ${FLIP_DUR_S}s ease-in-out ${FLIP_START_S}s both`,
-                }}>
-                  {/* front face: c.png */}
-                  <img
-                    src={letter.src}
-                    alt="c"
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      width: "100%",
-                      height: "100%",
-                      display: "block",
-                      backfaceVisibility: "hidden",
-                      WebkitBackfaceVisibility: "hidden",
-                    }}
-                  />
-                  {/* back face: pinch.png — pre-rotated so it faces back */}
-                  <img
-                    src="/assets/name/pinch.png"
-                    alt=""
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "contain",
-                      display: "block",
-                      filter: "invert(1)",
-                      transform: "rotateY(180deg)",
-                      backfaceVisibility: "hidden",
-                      WebkitBackfaceVisibility: "hidden",
-                    }}
-                  />
+                  animation: `compress-c ${COMPRESS_DUR_S}s ease-in-out ${COMPRESS_START_S}s both`,
+                  perspective: "600px",
+                } as CSSProperties}>
+                  <div style={{
+                    position: "relative",
+                    width: "100%",
+                    height: "100%",
+                    transformStyle: "preserve-3d",
+                    animation: `coin-flip ${FLIP_DUR_S}s ease-in-out ${FLIP_START_S}s both`,
+                  }}>
+                    <img
+                      src={letter.src}
+                      alt="c"
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        width: "100%",
+                        height: "100%",
+                        display: "block",
+                        backfaceVisibility: "hidden",
+                        WebkitBackfaceVisibility: "hidden",
+                      }}
+                    />
+                    <img
+                      src="/assets/name/pinch.png"
+                      alt=""
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "contain",
+                        display: "block",
+                        transform: "rotateY(180deg)",
+                        backfaceVisibility: "hidden",
+                        WebkitBackfaceVisibility: "hidden",
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
             );
           }
 
+          // p, i, h — emerge wrapper (translateX + opacity), compress wrapper (translateX only)
           return (
-            <img
-              key={i}
-              src={letter.src}
-              alt={letter.alt}
+            <div
+              key={letter.alt}
               style={{
-                ...vars,
-                position: "absolute",
-                left: letter.left,
-                top: letter.top,
-                width: letter.w,
-                height: letter.h,
-                display: "block",
-                opacity: isN ? 1 : 0,
-                animation: isN
-                  ? `pinch-compress ${COMPRESS_DUR_S}s ease-in-out ${COMPRESS_START_S}s both`
-                  : [
-                      `pinch-emerge ${EMERGE_DUR_S}s cubic-bezier(0.22,1,0.36,1) ${delay}s both`,
-                      `pinch-compress ${COMPRESS_DUR_S}s ease-in-out ${COMPRESS_START_S}s both`,
-                    ].join(", "),
+                ...slotStyle,
+                opacity: 0,
+                animation: `emerge-${letter.alt} ${EMERGE_DUR_S}s cubic-bezier(0.22,1,0.36,1) ${delay}s both`,
               } as CSSProperties}
-            />
+            >
+              <img
+                src={letter.src}
+                alt={letter.alt}
+                style={{
+                  display: "block",
+                  animation: `compress-${letter.alt} ${COMPRESS_DUR_S}s ease-in-out ${COMPRESS_START_S}s both`,
+                } as CSSProperties}
+              />
+            </div>
           );
         })}
+      </div>
+    </div>
+  );
+}
+
+function AboutOverlay({ onClose }: { onClose: () => void }) {
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 60,
+        backgroundColor: BG,
+        backgroundImage: MESH,
+        backgroundSize: "40px 40px",
+        overflowY: "auto",
+        display: "flex",
+        flexDirection: "column",
+        padding: "72px 48px 48px",
+        maxWidth: 680,
+      }}
+    >
+      <div style={{ flex: 1, fontFamily: "'DM Mono', monospace", fontSize: 14, lineHeight: 1.75, color: TEXT, display: "flex", flexDirection: "column", gap: 0 }}>
+        <p style={{ marginBottom: "1.5em" }}>
+          Builders get feedback on the idea, the pitch, the UI. Rarely on the
+          workflow: whether the steps connect, whether users can get from A to
+          B without hitting a wall.
+        </p>
+        <p style={{ marginBottom: "1.5em" }}>
+          A screen can look right and still send users in circles. Pages that
+          don&apos;t connect, flows with no exit, steps that assume context the
+          user never had. These aren&apos;t design bugs, but structure bugs: hidden
+          until one maps it.
+        </p>
+        <p style={{ marginBottom: "1.5em" }}>
+          There are tools helping you enhance your idea. Tools helping you
+          enhance your pitch. Who is helping you{" "}
+          <a href="#" style={{ color: ACCENT, textDecoration: "underline" }}>
+            enhance
+          </a>{" "}
+          your workflow?
+        </p>
+        <p style={{ marginBottom: "2.5em" }}>
+          navGraph turns your app into a graph and answers those questions:
+          specific recommendations, before you write a single line of code.
+          Not a side project, but a helping hand to ensure your project works.
+        </p>
+
+        {/* Color dots */}
+        <div style={{ display: "flex", gap: 10, marginBottom: "2em" }}>
+          {["#e74c3c", "#f0a500", "#3b82f6", "#27ae60"].map((color) => (
+            <div
+              key={color}
+              style={{ width: 22, height: 22, borderRadius: "50%", backgroundColor: color, flexShrink: 0 }}
+            />
+          ))}
+        </div>
+
+        {/* Buttons */}
+        <div style={{ display: "flex", gap: 12, marginBottom: "2.5em", flexWrap: "wrap" }}>
+          {[
+            { label: "CLOSE", onClick: onClose, href: undefined },
+            { label: "X", onClick: undefined, href: "https://x.com" },
+            { label: "LINKEDIN", onClick: undefined, href: "https://linkedin.com" },
+          ].map(({ label, onClick, href }) => {
+            const sharedStyle: CSSProperties = {
+              height: 40,
+              padding: "0 20px",
+              borderRadius: 999,
+              border: `1px solid rgba(170,204,187,0.3)`,
+              background: "transparent",
+              color: TEXT,
+              fontSize: 12,
+              fontFamily: "'DM Mono', monospace",
+              letterSpacing: "0.05em",
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              textDecoration: "none",
+            };
+            return href ? (
+              <a key={label} href={href} target="_blank" rel="noopener noreferrer" style={sharedStyle}>
+                {label}
+              </a>
+            ) : (
+              <button key={label} style={sharedStyle} onClick={onClick}>
+                {label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Footer */}
+        <p style={{ fontSize: 12, fontFamily: "'DM Mono', monospace", letterSpacing: "0.04em", color: "rgba(170,204,187,0.5)", textTransform: "uppercase" }}>
+          this is an open source{" "}
+          <a
+            href="https://github.com/waseem091/pinch"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: "inherit", textDecoration: "none" }}
+            onMouseEnter={e => (e.currentTarget.style.textDecoration = "underline")}
+            onMouseLeave={e => (e.currentTarget.style.textDecoration = "none")}
+          >
+            project
+          </a>
+        </p>
       </div>
     </div>
   );
@@ -422,6 +531,7 @@ function PinchTitle() {
 export default function Home() {
   const [tab, setTab] = useState<Tab>("bounties");
   const [selected, setSelected] = useState<Item | null>(null);
+  const [showAbout, setShowAbout] = useState(false);
   const btnBounties = useRef<HTMLButtonElement>(null);
   const btnSideQuests = useRef<HTMLButtonElement>(null);
   const pillRef = useRef<HTMLDivElement>(null);
@@ -449,14 +559,16 @@ export default function Home() {
     <div style={s.page}>
       {/* Header */}
       <header style={s.header}>
-        <button style={s.infoBtn} aria-label="Info">?</button>
-        <button style={s.connectBtn}>Connect Wallet</button>
+        <button style={s.infoBtn} aria-label="Info" onClick={() => setShowAbout(true)}>?</button>
+        {process.env.NEXT_PUBLIC_PRIVY_APP_ID && process.env.NEXT_PUBLIC_PRIVY_APP_ID !== "your-privy-app-id-here"
+          ? <UserPill action={{ type: "connectWallet" }} />
+          : <button style={s.connectBtn}>Connect Wallet</button>
+        }
       </header>
 
       {/* Hero */}
       <div style={s.hero}>
         <PinchTitle />
-        <p style={s.subtitle}>autonomous robot bounties · onchain</p>
       </div>
 
       {/* Toggle */}
@@ -465,14 +577,14 @@ export default function Home() {
           <div ref={pillRef} style={{ ...s.slidingBg, ...pillStyle }} />
           <button
             ref={btnBounties}
-            style={{ ...s.tabBtn, color: tab === "bounties" ? BG : "rgba(36,36,36,0.4)" }}
+            style={{ ...s.tabBtn, color: tab === "bounties" ? BG : "rgba(170,204,187,0.4)", background: tab === "bounties" && !pillStyle.width ? ACCENT : "transparent" }}
             onClick={() => setTab("bounties")}
           >
             Bounties
           </button>
           <button
             ref={btnSideQuests}
-            style={{ ...s.tabBtn, color: tab === "sidequests" ? BG : "rgba(36,36,36,0.4)" }}
+            style={{ ...s.tabBtn, color: tab === "sidequests" ? BG : "rgba(170,204,187,0.4)", background: tab === "sidequests" && !pillStyle.width ? ACCENT : "transparent" }}
             onClick={() => setTab("sidequests")}
           >
             Side Quests
@@ -481,19 +593,19 @@ export default function Home() {
       </div>
 
       {/* Grid */}
-      <div style={s.grid}>
+      <div className="card-grid">
         {items.map((item) => (
           <button
             key={item.id}
             style={s.card}
             onClick={() => setSelected(item)}
             onMouseEnter={e => {
-              (e.currentTarget as HTMLElement).style.borderColor = "rgba(36,36,36,0.22)";
-              (e.currentTarget as HTMLElement).style.background = "#fff3ea";
+              (e.currentTarget as HTMLElement).style.borderColor = "rgba(170,204,187,0.22)";
+              (e.currentTarget as HTMLElement).style.background = "rgba(170,204,187,0.08)";
             }}
             onMouseLeave={e => {
-              (e.currentTarget as HTMLElement).style.borderColor = "rgba(36,36,36,0.1)";
-              (e.currentTarget as HTMLElement).style.background = "#fff8f2";
+              (e.currentTarget as HTMLElement).style.borderColor = "rgba(170,204,187,0.1)";
+              (e.currentTarget as HTMLElement).style.background = "rgba(170,204,187,0.04)";
             }}
           >
             <div style={s.cardImg} />
@@ -526,6 +638,9 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      {/* About overlay */}
+      {showAbout && <AboutOverlay onClose={() => setShowAbout(false)} />}
     </div>
   );
 }

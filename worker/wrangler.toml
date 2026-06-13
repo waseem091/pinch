@@ -1,0 +1,18 @@
+name = "pinch-relay"
+main = "worker.js"
+compatibility_date = "2026-01-01"
+
+[[durable_objects.bindings]]
+name = "RELAY"
+class_name = "Relay"
+
+# free plan requires SQLite-backed durable object classes
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Relay"]
+
+# allow importing viewer.html as a text module
+[[rules]]
+type = "Text"
+globs = ["**/*.html"]
+fallthrough = true

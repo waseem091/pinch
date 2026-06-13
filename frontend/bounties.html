@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pinch — Robot Bounties</title>
+<style>
+:root {
+  --bg:      #080808;
+  --surface: #111;
+  --s2:      #161616;
+  --border:  #1e1e1e;
+  --b2:      #2a2a2a;
+  --text:    #e0e0e0;
+  --muted:   #555;
+  --green:   #00c853;
+  --yellow:  #fbbf24;
+  --blue:    #38bdf8;
+  --red:     #f87171;
+  --purple:  #a78bfa;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  min-height: 100vh; padding-bottom: 60px;
+}
+
+/* ── Header ── */
+header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 24px; border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; background: var(--bg); z-index: 20;
+  gap: 12px; flex-wrap: wrap;
+}
+.header-left { display: flex; align-items: center; gap: 16px; }
+h1 { font-size: 14px; letter-spacing: 3px; color: #fff; }
+
+.live-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11px; color: var(--muted); letter-spacing: 1px;
+}
+.live-pill .dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--red); flex-shrink: 0;
+}
+.live-pill.on .dot { background: var(--green); animation: blink 2s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+.wallet-btn {
+  padding: 7px 16px; border-radius: 8px; font-family: inherit;
+  font-size: 12px; cursor: pointer; border: 1px solid var(--b2);
+  background: var(--s2); color: var(--text);
+  transition: border-color .15s, color .15s; white-space: nowrap;
+}
+.wallet-btn:hover { border-color: #444; }
+.wallet-btn.ok  { border-color: var(--green);  color: var(--green);  }
+.wallet-btn.err { border-color: var(--red);    color: var(--red);    }
+
+/* ── Robot bar ── */
+#robot-bar {
+  display: none; flex-wrap: wrap; gap: 6px 20px;
+  padding: 10px 24px; font-size: 11px; color: var(--muted);
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  align-items: center;
+}
+#robot-bar.show { display: flex; }
+#robot-bar strong { color: var(--text); }
+#robot-bar a { color: var(--blue); text-decoration: none; }
+#robot-bar a:hover { text-decoration: underline; }
+.hedera-badge {
+  margin-left: auto; display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11px; color: var(--purple);
+  border: 1px solid #2a1f3d; background: #12092a;
+  padding: 3px 9px; border-radius: 20px;
+}
+
+/* ── Main ── */
+main { max-width: 1100px; margin: 0 auto; padding: 28px 24px; }
+.toolbar {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 20px; gap: 12px; flex-wrap: wrap;
+}
+.section-label { font-size: 11px; letter-spacing: 2px; color: var(--muted); }
+#last-update   { font-size: 11px; color: var(--muted); }
+
+/* ── Grid ── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 14px;
+}
+
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; overflow: hidden; display: flex;
+  flex-direction: column; transition: border-color .2s;
+}
+.card.available { border-color: #1a2e1a; }
+.card.claimed   { border-color: #2a2a14; }
+.card.resolved  { border-color: #1a1030; }
+
+.card-thumb {
+  height: 150px; background: #0d0d0d;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 56px; overflow: hidden; flex-shrink: 0;
+}
+.card-thumb img { width:100%; height:100%; object-fit:cover; }
+
+.card-body { padding: 16px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+
+.card-row  { display: flex; justify-content: space-between; align-items: flex-start; }
+.card-name { font-size: 15px; color: #fff; font-weight: 700; }
+.card-age  { font-size: 11px; color: var(--muted); padding-top: 2px; }
+
+.badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11px; padding: 3px 9px; border-radius: 20px; letter-spacing: .5px;
+}
+.badge .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.badge.available { background: #0e1f0e; color: var(--green); }
+.badge.claimed   { background: #1f1f0a; color: var(--yellow); }
+.badge.resolved  { background: #0f0820; color: var(--purple); }
+
+.bounty-row   { display: flex; align-items: baseline; gap: 6px; }
+.bounty-amt   { font-size: 26px; color: #fff; }
+.bounty-unit  { font-size: 12px; color: var(--muted); }
+
+.card-meta { font-size: 12px; color: var(--muted); line-height: 1.7; word-break: break-all; }
+.card-meta a { color: var(--blue); text-decoration: none; }
+.card-meta a:hover { text-decoration: underline; }
+
+.claim-btn {
+  margin-top: auto; width: 100%; padding: 10px; border-radius: 8px;
+  border: none; cursor: pointer; font-family: inherit;
+  font-size: 13px; font-weight: 700; letter-spacing: .5px;
+  transition: background .15s;
+}
+.claim-btn.go   { background: var(--green); color: #000; }
+.claim-btn.go:hover { background: #00e06a; }
+.claim-btn.off  { background: var(--s2); color: var(--muted); cursor: default; border: 1px solid var(--border); }
+.claim-btn.spin { background: var(--s2); color: var(--muted); cursor: wait; border: 1px solid var(--border); }
+
+/* ── Empty ── */
+.empty { grid-column: 1/-1; text-align: center; padding: 80px 20px; color: var(--muted); }
+.empty .icon { font-size: 52px; margin-bottom: 14px; }
+.empty p { font-size: 13px; line-height: 1.8; }
+
+/* ── Sim bar ── */
+#sim-bar {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 10;
+  display: flex; align-items: center; gap: 8px; padding: 10px 24px;
+  background: var(--surface); border-top: 1px solid var(--border);
+}
+#sim-bar .label { font-size: 11px; color: var(--muted); margin-right: 4px; }
+.sim-btn {
+  padding: 5px 13px; border-radius: 6px; border: 1px solid var(--b2);
+  background: transparent; color: var(--muted);
+  font-family: inherit; font-size: 11px; cursor: pointer;
+}
+.sim-btn:hover { border-color: #444; color: var(--text); }
+
+/* ── Toast ── */
+#toast {
+  position: fixed; top: 18px; right: 20px; z-index: 99;
+  padding: 10px 18px; border-radius: 8px; font-size: 12px;
+  background: var(--s2); border: 1px solid var(--b2);
+  display: none; max-width: 320px; line-height: 1.5;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <h1>PINCH BOUNTIES</h1>
+    <div class="live-pill" id="live-pill">
+      <span class="dot"></span><span id="live-text">connecting…</span>
+    </div>
+  </div>
+  <button class="wallet-btn" id="wallet-btn" onclick="connectWallet()">Connect Wallet</button>
+</header>
+
+<div id="robot-bar">
+  Robot:&nbsp;<a id="rb-addr" href="#" target="_blank">—</a>
+  &nbsp;·&nbsp; Balance: <strong id="rb-bal">—</strong> HBAR
+  &nbsp;·&nbsp; Reward: <strong id="rb-reward">—</strong> HBAR per bounty
+  <span class="hedera-badge">⬡ Hedera Testnet</span>
+</div>
+
+<main>
+  <div class="toolbar">
+    <span class="section-label">ACTIVE QUESTS</span>
+    <span id="last-update"></span>
+  </div>
+  <div class="grid" id="grid">
+    <div class="empty"><div class="icon">⬡</div><p>Loading bounties…</p></div>
+  </div>
+</main>
+
+<div id="sim-bar">
+  <span class="label">DEV SIM →</span>
+  <button class="sim-btn" onclick="sim('blocked')">🚨 Post bounty</button>
+  <button class="sim-btn" onclick="sim('clear')">✅ Resolve</button>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── Config ────────────────────────────────────────────────────────────────────
+const API      = 'https://pinch-ie4r.onrender.com';
+const WORKER   = 'https://pinch-relay.jenil-panchal10.workers.dev';
+const HASHSCAN = 'https://hashscan.io/testnet';
+
+// Cache of quest ID → { hederaTxId, hederaTxUrl } fetched from the Worker
+const hederaPayments = {};
+
+// Hedera Testnet EVM (MetaMask compatible)
+const HEDERA_TESTNET = {
+  chainId:         '0x128',   // 296 decimal
+  chainName:       'Hedera Testnet',
+  nativeCurrency:  { name: 'HBAR', symbol: 'HBAR', decimals: 18 },
+  rpcUrls:         ['https://testnet.hashio.io/api'],
+  blockExplorerUrls: [HASHSCAN],
+};
+
+let walletAddress = null;
+let quests = [];
+
+// ── Wallet ────────────────────────────────────────────────────────────────────
+async function connectWallet() {
+  const btn = document.getElementById('wallet-btn');
+  if (!window.ethereum) {
+    toast('MetaMask not found — install it at metamask.io', 4000);
+    return;
+  }
+  try {
+    btn.textContent = 'Connecting…';
+    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+
+    // Switch to Hedera Testnet; add it if not already in MetaMask
+    try {
+      await window.ethereum.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: HEDERA_TESTNET.chainId }],
+      });
+    } catch (e) {
+      if (e.code === 4902 || e.code === -32603) {
+        await window.ethereum.request({
+          method: 'wallet_addEthereumChain',
+          params: [HEDERA_TESTNET],
+        });
+      } else throw e;
+    }
+
+    walletAddress = accounts[0];
+    btn.textContent = walletAddress.slice(0, 6) + '…' + walletAddress.slice(-4);
+    btn.className = 'wallet-btn ok';
+    toast('Wallet connected on Hedera Testnet ✓');
+    renderCards();
+  } catch (e) {
+    btn.textContent = 'Connect Wallet';
+    btn.className = 'wallet-btn err';
+    setTimeout(() => btn.className = 'wallet-btn', 2000);
+    if (e.code !== 4001) toast('Connection failed: ' + (e.message || e), 4000);
+  }
+}
+
+window.ethereum?.on('accountsChanged', (accs) => {
+  walletAddress = accs[0] || null;
+  const btn = document.getElementById('wallet-btn');
+  btn.textContent = walletAddress
+    ? walletAddress.slice(0, 6) + '…' + walletAddress.slice(-4)
+    : 'Connect Wallet';
+  btn.className = 'wallet-btn' + (walletAddress ? ' ok' : '');
+  renderCards();
+});
+
+// ── Robot bar ─────────────────────────────────────────────────────────────────
+async function loadRobotBar() {
+  try {
+    const r = await fetch(`${API}/api/agent`);
+    if (!r.ok) return;
+    const d = await r.json();
+    const addr = d.address || '';
+    const bar  = document.getElementById('robot-bar');
+
+    document.getElementById('rb-addr').textContent = addr.slice(0,6)+'…'+addr.slice(-4);
+    document.getElementById('rb-addr').href = `${HASHSCAN}/account/${addr}`;
+
+    // API returns MON amounts — we label them as HBAR
+    document.getElementById('rb-bal').textContent    = d.balance?.mon    ?? '—';
+    document.getElementById('rb-reward').textContent = d.rewardMon       ?? '—';
+
+    bar.classList.add('show');
+  } catch {}
+}
+
+// ── Quests ────────────────────────────────────────────────────────────────────
+async function fetchQuests() {
+  try {
+    const r = await fetch(`${API}/api/quests`);
+    if (!r.ok) throw new Error(r.status);
+    quests = await r.json();
+
+    // For every resolved quest, fetch its Hedera tx from the Worker (parallel)
+    const resolved = quests.filter(q => q.status === 'resolved' && !hederaPayments[q.id]);
+    await Promise.all(resolved.map(async (q) => {
+      try {
+        const pr = await fetch(`${WORKER}/payments/${q.id}`);
+        if (pr.ok) {
+          const data = await pr.json();
+          if (data?.hederaTxId) hederaPayments[q.id] = data;
+        }
+      } catch {}
+    }));
+
+    document.getElementById('last-update').textContent =
+      'updated ' + new Date().toLocaleTimeString();
+    renderCards();
+  } catch (e) {
+    console.error('fetchQuests:', e.message);
+  }
+}
+
+function timeAgo(iso) {
+  const s = Math.floor((Date.now() - new Date(iso)) / 1000);
+  if (s < 60)   return `${s}s ago`;
+  if (s < 3600) return `${Math.floor(s / 60)}m ago`;
+  return `${Math.floor(s / 3600)}h ago`;
+}
+
+function renderCards() {
+  const grid = document.getElementById('grid');
+
+  if (!quests.length) {
+    grid.innerHTML = `
+      <div class="empty">
+        <div class="icon">⬡</div>
+        <p>No active bounties right now.<br>
+           Hit <strong>Post bounty</strong> below to simulate one,<br>
+           or wait for a robot to get stuck.</p>
+      </div>`;
+    return;
+  }
+
+  grid.innerHTML = quests.map(q => {
+    // Thumbnail
+    const thumb = q.imageUrl
+      ? `<img src="${q.imageUrl}" alt="${q.name}" onerror="this.style.display='none'">`
+      : '🤖';
+
+    // Status badge
+    const badgeLabel = { available: 'AVAILABLE', claimed: 'CLAIMED', resolved: 'RESOLVED' };
+    const badge = `<span class="badge ${q.status}">
+      <span class="dot"></span>${badgeLabel[q.status] || q.status}
+    </span>`;
+
+    // Meta line (claimed by / paid tx)
+    let meta = '';
+    if (q.status === 'claimed' && q.operatorAddress) {
+      meta = `<div class="card-meta">
+        Claimed by<br>${q.operatorAddress}
+      </div>`;
+    } else if (q.status === 'resolved') {
+      const hp = hederaPayments[q.id];
+      if (hp?.hederaTxUrl) {
+        meta = `<div class="card-meta">
+          Paid on Hedera Testnet ·
+          <a href="${hp.hederaTxUrl}" target="_blank">view on Hashscan ↗</a>
+          ${hp.claimer ? `<br>${hp.claimer}` : ''}
+        </div>`;
+      } else {
+        // Payment tx not yet stored in Worker — show processing state
+        meta = `<div class="card-meta" style="color:#fa0">
+          ⬡ Hedera payment processing…
+        </div>`;
+      }
+    }
+
+    // CTA button
+    let btn = '';
+    if (q.status === 'available') {
+      btn = walletAddress
+        ? `<button class="claim-btn go" id="cb-${q.id}" onclick="claimBounty('${q.id}')">
+             Claim — ${q.bounty} HBAR
+           </button>`
+        : `<button class="claim-btn go" onclick="connectWallet()">
+             Connect wallet to claim
+           </button>`;
+    } else if (q.status === 'claimed') {
+      btn = `<button class="claim-btn off">Claimed</button>`;
+    } else {
+      btn = `<button class="claim-btn off">Resolved ✓</button>`;
+    }
+
+    return `
+    <div class="card ${q.status}">
+      <div class="card-thumb">${thumb}</div>
+      <div class="card-body">
+        <div class="card-row">
+          <span class="card-name">${q.name}</span>
+          <span class="card-age">${timeAgo(q.postedAt)}</span>
+        </div>
+        ${badge}
+        <div class="bounty-row">
+          <span class="bounty-amt">${q.bounty}</span>
+          <span class="bounty-unit">HBAR</span>
+        </div>
+        ${meta}
+        ${btn}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Claim ─────────────────────────────────────────────────────────────────────
+async function claimBounty(id) {
+  if (!walletAddress) { connectWallet(); return; }
+
+  const btn = document.getElementById(`cb-${id}`);
+  if (!btn || btn.classList.contains('spin')) return;
+
+  btn.className = 'claim-btn spin';
+  btn.textContent = 'Claiming…';
+
+  try {
+    const r = await fetch(`${API}/api/bounties/${id}/claim`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ solver: walletAddress }),
+    });
+    const data = await r.json();
+    if (!r.ok || data.error) throw new Error(data.error || r.status);
+    toast('Bounty claimed! Robot will pay you in HBAR when the task is done ✓');
+    await fetchQuests();
+  } catch (e) {
+    toast('Claim failed: ' + e.message, 4000);
+    const q = quests.find(q => q.id === id);
+    if (btn) {
+      btn.className = 'claim-btn go';
+      btn.textContent = `Claim — ${q?.bounty ?? ''} HBAR`;
+    }
+  }
+}
+
+// ── SSE ───────────────────────────────────────────────────────────────────────
+function connectSSE() {
+  const pill  = document.getElementById('live-pill');
+  const label = document.getElementById('live-text');
+
+  const es = new EventSource(`${API}/api/events`);
+
+  es.onopen = () => {
+    pill.classList.add('on');
+    label.textContent = 'live';
+  };
+
+  es.onmessage = (e) => {
+    try {
+      const { type } = JSON.parse(e.data);
+      const msgs = {
+        obstruction_detected: '🚨 New bounty posted — a robot needs help',
+        bounty_claimed:       '✓ Bounty claimed',
+        bounty_paid:          '⬡ Bounty paid in HBAR',
+        bounty_cancelled:     'Bounty cancelled',
+      };
+      if (msgs[type]) toast(msgs[type]);
+    } catch {}
+    fetchQuests(); // refetch on every event
+  };
+
+  es.onerror = () => {
+    pill.classList.remove('on');
+    label.textContent = 'reconnecting…';
+    es.close();
+    setTimeout(connectSSE, 4000);
+  };
+}
+
+// ── Sim ───────────────────────────────────────────────────────────────────────
+async function sim(action) {
+  try {
+    const r = await fetch(`${API}/api/sim/${action}`, { method: 'POST' });
+    if (!r.ok) throw new Error(r.status);
+    toast(action === 'blocked' ? '🚨 Sim: bounty posted' : '✅ Sim: resolved');
+  } catch (e) {
+    toast('Sim error: ' + e.message, 3000);
+  }
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+let _toastTimer;
+function toast(msg, ms = 2800) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.display = 'block';
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => el.style.display = 'none', ms);
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+loadRobotBar();
+fetchQuests();
+connectSSE();
+</script>
+</body>
+</html>

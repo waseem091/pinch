@@ -1,0 +1,20 @@
+{
+  "version": 2,
+  "name": "pinch",
+  "builds": [
+    { "src": "frontend/*.html", "use": "@vercel/static" }
+  ],
+  "routes": [
+    { "src": "/bounties", "dest": "/frontend/bounties.html" },
+    { "src": "/(.*)",     "dest": "/frontend/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
+        { "key": "Permissions-Policy", "value": "xr-spatial-tracking=*" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "name": "pinch",
+  "version": "1.0.0",
+  "description": "WebXR hand tracking relay for Snap Spectacles",
+  "main": "server.js",
+  "scripts": {
+    "setup": "node monitor/setup-robot.js",
+    "bounty": "node monitor/hedera-monitor.js",
+    "deploy:worker": "cd worker && wrangler deploy",
+    "deploy:frontend": "vercel --prod"
+  },
+  "dependencies": {
+    "@hashgraph/sdk": "^2.81.0",
+    "dotenv": "^17.4.2",
+    "eventsource": "^4.1.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "wrangler": "^4.100.0"
+  }
+}

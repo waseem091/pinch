@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pinch – Live Hand Data</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 20px;
+    background: #0a0a0a; color: #e0e0e0;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  h1 { font-size: 18px; margin: 0 0 4px; color: #fff; }
+  #status { font-size: 13px; margin-bottom: 16px; }
+  #status .dot {
+    display: inline-block; width: 9px; height: 9px; border-radius: 50%;
+    background: #e00; margin-right: 6px; vertical-align: baseline;
+  }
+  #status.live .dot { background: #0c0; }
+  #meta { color: #888; font-size: 12px; margin-bottom: 16px; }
+
+  .hands { display: flex; gap: 24px; flex-wrap: wrap; }
+  .hand { flex: 1; min-width: 340px; }
+  .hand h2 {
+    font-size: 14px; margin: 0 0 8px; padding: 6px 10px; border-radius: 6px;
+  }
+  .hand.left  h2 { background: #062; color: #6f6; }
+  .hand.right h2 { background: #045; color: #6df; }
+  .hand .untracked { color: #555; font-size: 13px; padding: 10px; }
+
+  table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+  th, td { text-align: right; padding: 3px 10px; }
+  th { color: #888; font-weight: normal; border-bottom: 1px solid #333; }
+  td:first-child, th:first-child { text-align: left; }
+  tr:nth-child(even) { background: #141414; }
+  td.name { color: #aaa; }
+  td.null { color: #444; }
+  tr.finger-start td { border-top: 1px solid #2a2a2a; }
+</style>
+</head>
+<body>
+
+<h1>Pinch — live hand tracking data</h1>
+<div id="status"><span class="dot"></span><span id="status-text">connecting…</span></div>
+<div id="specs-status" style="font-size:13px;margin-bottom:6px;color:#888;">
+  Spectacles: <span id="specs-text">never seen</span>
+</div>
+<div id="meta">frame: – &nbsp; age: – &nbsp; rate: –</div>
+
+<div class="hands">
+  <div class="hand left">
+    <h2>LEFT HAND</h2>
+    <div id="left-body"><div class="untracked">not tracked</div></div>
+  </div>
+  <div class="hand right">
+    <h2>RIGHT HAND</h2>
+    <div id="right-body"><div class="untracked">not tracked</div></div>
+  </div>
+</div>
+
+<script>
+const JOINT_NAMES = [
+  'wrist',
+  'thumb metacarpal','thumb proximal','thumb distal','thumb tip',
+  'index metacarpal','index proximal','index intermediate','index distal','index tip',
+  'middle metacarpal','middle proximal','middle intermediate','middle distal','middle tip',
+  'ring metacarpal','ring proximal','ring intermediate','ring distal','ring tip',
+  'pinky metacarpal','pinky proximal','pinky intermediate','pinky distal','pinky tip',
+];
+// first joint of each finger gets a separator line
+const FINGER_STARTS = new Set([1, 5, 10, 15, 20]);
+
+function buildTable(containerId) {
+  const rows = [];
+  let html = '<table><tr><th>joint</th><th>x (m)</th><th>y (m)</th><th>z (m)</th></tr>';
+  for (let i = 0; i < JOINT_NAMES.length; i++) {
+    const cls = FINGER_STARTS.has(i) ? ' class="finger-start"' : '';
+    html += `<tr${cls}><td class="name">${JOINT_NAMES[i]}</td>` +
+            `<td id="${containerId}-${i}-x">–</td>` +
+            `<td id="${containerId}-${i}-y">–</td>` +
+            `<td id="${containerId}-${i}-z">–</td></tr>`;
+  }
+  html += '</table>';
+  document.getElementById(containerId).innerHTML = html;
+}
+
+function updateHand(containerId, handData) {
+  const container = document.getElementById(containerId);
+  if (!handData) {
+    container.innerHTML = '<div class="untracked">not tracked</div>';
+    container.dataset.table = '';
+    return;
+  }
+  if (container.dataset.table !== '1') {
+    buildTable(containerId);
+    container.dataset.table = '1';
+  }
+  for (let i = 0; i < JOINT_NAMES.length; i++) {
+    const j = handData.joints[i];
+    for (const [axis, k] of [['x',0],['y',1],['z',2]]) {
+      const cell = document.getElementById(`${containerId}-${i}-${axis}`);
+      if (j) { cell.textContent = j.pos[k].toFixed(3); cell.className = ''; }
+      else   { cell.textContent = '–';                 cell.className = 'null'; }
+    }
+  }
+}
+
+// ---- live updates over WebSocket ----
+// (the relay echoes every Spectacles frame to all other WS clients;
+//  SSE is buffered by cloudflare's tunnel, websockets are not)
+const statusEl = document.getElementById('status');
+const statusText = document.getElementById('status-text');
+const metaEl = document.getElementById('meta');
+
+let lastFrame = null;
+let msgTimes = [];
+let lastHeartbeat = 0;
+let heartbeatInfo = null;
+
+function connect() {
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const ws = new WebSocket(proto + '//' + location.host + '/ws');
+  ws.onopen = () => { statusEl.classList.add('live'); statusText.textContent = 'live'; };
+  ws.onclose = () => {
+    statusEl.classList.remove('live');
+    statusText.textContent = 'reconnecting…';
+    setTimeout(connect, 2000);
+  };
+  ws.onmessage = (e) => {
+    let data;
+    try { data = JSON.parse(e.data); } catch { return; }
+
+    if (data.type === 'status') {
+      lastHeartbeat = Date.now();
+      heartbeatInfo = data;
+      return;
+    }
+
+    lastFrame = data;
+    lastFrame._localReceivedAt = Date.now();
+    msgTimes.push(Date.now());
+    if (msgTimes.length > 60) msgTimes.shift();
+    updateHand('left-body',  data.left);
+    updateHand('right-body', data.right);
+  };
+}
+connect();
+
+// Spectacles presence line, driven by 1 Hz heartbeats from the page
+setInterval(() => {
+  const el = document.getElementById('specs-text');
+  if (!lastHeartbeat) { el.textContent = 'never seen'; el.style.color = '#e00'; return; }
+  const age = Date.now() - lastHeartbeat;
+  if (age > 5000) {
+    el.textContent = `lost (last seen ${(age/1000).toFixed(0)}s ago)`;
+    el.style.color = '#e00';
+    return;
+  }
+  const hb = heartbeatInfo;
+  el.textContent = hb.xr
+    ? `page open ✓  AR session ✓  hands: L:${hb.left} R:${hb.right}`
+    : 'page open ✓  AR session not started — tap the screen on Spectacles';
+  el.style.color = hb.xr ? '#0c0' : '#fa0';
+}, 500);
+
+// meta line: frame number, data age, message rate
+setInterval(() => {
+  if (!lastFrame) return;
+  const age = ((Date.now() - (lastFrame._localReceivedAt || 0)) / 1000).toFixed(1);
+  let rate = '–';
+  if (msgTimes.length >= 2) {
+    const span = (msgTimes[msgTimes.length - 1] - msgTimes[0]) / 1000;
+    if (span > 0) rate = ((msgTimes.length - 1) / span).toFixed(0) + ' msg/s';
+  }
+  metaEl.textContent = `frame: ${lastFrame.frame}   age: ${age}s   rate: ${rate}`;
+}, 250);
+</script>
+</body>
+</html>

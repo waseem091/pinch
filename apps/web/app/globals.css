@@ -1,31 +1,30 @@
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap');
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* Letters emerge from behind neighbour to their Figma position (already 40px apart) */
 @keyframes pinch-emerge {
   from { transform: translateX(var(--emerge-x, 0)); opacity: 0; }
-  to   { transform: translateX(var(--gap-offset, 0)); opacity: 1; }
+  to   { transform: translateX(0); opacity: 1; }
 }
 
+/* After emerge, compress 40px gaps down to 10px by shifting inward */
 @keyframes pinch-compress {
-  from { transform: translateX(var(--gap-offset, 0)); }
-  to   { transform: translateX(0); }
+  from { transform: translateX(0); }
+  to   { transform: translateX(var(--compress-x, 0)); }
 }
 
 
-@keyframes flip-out {
-  from { transform: scaleX(1); }
-  to   { transform: scaleX(0); }
-}
-
-@keyframes flip-in {
-  from { transform: scaleX(0); }
-  to   { transform: scaleX(1); }
+@keyframes coin-flip {
+  from { transform: rotateY(0deg); }
+  to   { transform: rotateY(180deg); }
 }
 
 
 html, body {
   background: #ffeedd;
   color: #242424;
-  font-family: 'Instrument Sans', sans-serif;
+  font-family: var(--font-instrument-sans), 'Instrument Sans', sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 

@@ -37,7 +37,7 @@ const s: Record<string, CSSProperties> = {
     minHeight: "100vh",
     background: BG,
     color: TEXT,
-    fontFamily: "'Instrument Sans', sans-serif",
+    fontFamily: "var(--font-instrument-sans), sans-serif",
   },
   header: {
     position: "fixed",
@@ -56,7 +56,7 @@ const s: Record<string, CSSProperties> = {
     background: "transparent",
     color: "rgba(36,36,36,0.5)",
     fontSize: 16,
-    fontFamily: "'Instrument Sans', sans-serif",
+    fontFamily: "var(--font-instrument-sans), sans-serif",
     cursor: "pointer",
     display: "flex",
     alignItems: "center",
@@ -71,7 +71,7 @@ const s: Record<string, CSSProperties> = {
     background: "transparent",
     color: "rgba(36,36,36,0.65)",
     fontSize: 14,
-    fontFamily: "'Instrument Sans', sans-serif",
+    fontFamily: "var(--font-instrument-sans), sans-serif",
     fontWeight: 500,
     cursor: "pointer",
     letterSpacing: "-0.01em",
@@ -84,7 +84,7 @@ const s: Record<string, CSSProperties> = {
     userSelect: "none",
   },
   title: {
-    fontFamily: "'Instrument Serif', serif",
+    fontFamily: "var(--font-instrument-serif), serif",
     fontStyle: "italic",
     fontSize: "clamp(72px, 14vw, 160px)",
     lineHeight: 1,
@@ -130,7 +130,7 @@ const s: Record<string, CSSProperties> = {
     cursor: "pointer",
     fontSize: 14,
     fontWeight: 500,
-    fontFamily: "'Instrument Sans', sans-serif",
+    fontFamily: "var(--font-instrument-sans), sans-serif",
     letterSpacing: "-0.01em",
     transition: "color 0.25s",
     whiteSpace: "nowrap",
@@ -231,7 +231,7 @@ const s: Record<string, CSSProperties> = {
     alignItems: "center",
     justifyContent: "center",
     zIndex: 1,
-    fontFamily: "'Instrument Sans', sans-serif",
+    fontFamily: "var(--font-instrument-sans), sans-serif",
   },
   modalCanvas: {
     width: "100%",
@@ -268,7 +268,7 @@ const s: Record<string, CSSProperties> = {
     color: BG,
     fontSize: 14,
     fontWeight: 600,
-    fontFamily: "'Instrument Sans', sans-serif",
+    fontFamily: "var(--font-instrument-sans), sans-serif",
     cursor: "pointer",
     letterSpacing: "-0.01em",
   },
@@ -281,81 +281,97 @@ const s: Record<string, CSSProperties> = {
     color: "rgba(36,36,36,0.45)",
     fontSize: 14,
     fontWeight: 500,
-    fontFamily: "'Instrument Sans', sans-serif",
+    fontFamily: "var(--font-instrument-sans), sans-serif",
     cursor: "pointer",
     letterSpacing: "-0.01em",
   },
 };
 
-// Exact Figma positions (node 39-20) — tight final layout, 584×150px container.
-// gap-offset: extra translateX applied during emerge so letters land 40px apart.
-// After pause, pinch-compress animates gap-offset → 0 (closing to Figma positions = ~10px gap).
-// emergeFrom: the left of the neighbour each letter starts behind.
-const FIGMA_W  = 584;
-const FIGMA_H  = 150;
-const GAP_EXTRA = 30; // 40px emerge gap − ~10px Figma gap = 30px extra per step
-const LETTERS  = [
-  // dist from n, gap-offset pushes left letters left (negative) and right letters right (positive)
-  { src: "/assets/name/p.png", alt: "p", left: 0,   top: 38, w: 100, h: 150, emergeFrom: 140, dist: 2, side: -1 },
-  { src: "/assets/name/i.png", alt: "i", left: 140, top: 15, w: 50,  h: 135, emergeFrom: 230, dist: 1, side: -1 },
-  { src: "/assets/name/n.png", alt: "n", left: 230, top: 45, w: 96,  h: 105, emergeFrom: 0,   dist: 0, side:  0 },
-  { src: "/assets/name/c.png", alt: "c", left: 366, top: 45, w: 88,  h: 105, emergeFrom: 230, dist: 1, side:  1 },
-  { src: "/assets/name/h.png", alt: "h", left: 494, top: 0,  w: 90,  h: 150, emergeFrom: 366, dist: 2, side:  1 },
+// Figma positions already have exactly 40px gaps between letters.
+// emerge-x: each letter starts at its neighbour's position and slides to its own.
+// compress-x: after emerge, letters shift inward so gaps go from 40px → 10px.
+//   compress-x = dist × 30px × side (30 = 40-10, inward = toward n)
+const FIGMA_W = 584;
+const FIGMA_H = 150;
+const LETTERS = [
+  { src: "/assets/name/p.png", alt: "p", left: 0,   top: 38, w: 100, h: 150, neighbourLeft: 140, dist: 2, compressX:  60 },
+  { src: "/assets/name/i.png", alt: "i", left: 140, top: 15, w: 50,  h: 135, neighbourLeft: 230, dist: 1, compressX:  30 },
+  { src: "/assets/name/n.png", alt: "n", left: 230, top: 45, w: 96,  h: 105, neighbourLeft: 230, dist: 0, compressX:   0 },
+  { src: "/assets/name/c.png", alt: "c", left: 366, top: 45, w: 88,  h: 105, neighbourLeft: 230, dist: 1, compressX: -30 },
+  { src: "/assets/name/h.png", alt: "h", left: 494, top: 0,  w: 90,  h: 150, neighbourLeft: 366, dist: 2, compressX: -60 },
 ];
 
 const EMERGE_DUR_S     = 0.45;
-const STEP_S           = 0.15; // stagger: i/c first, then p/h
+const STEP_S           = 0.15;
 const PAUSE_S          = 0.2;
 const LAST_END_S       = 0.1 + STEP_S + EMERGE_DUR_S;
 const COMPRESS_START_S = LAST_END_S + PAUSE_S;
 const COMPRESS_DUR_S   = 0.4;
-const FLIP_HALF_S      = 0.18;
+const FLIP_DUR_S       = 0.35;
 const FLIP_START_S     = COMPRESS_START_S + COMPRESS_DUR_S / 2;
 
 function PinchTitle() {
-  const [flipped, setFlipped] = useState(false);
-
-  useEffect(() => {
-    const t = setTimeout(() => setFlipped(true), (FLIP_START_S + FLIP_HALF_S) * 1000);
-    return () => clearTimeout(t);
-  }, []);
-
   return (
     <div style={{ display: "flex", justifyContent: "center" }}>
       <div style={{ position: "relative", width: FIGMA_W, height: FIGMA_H, filter: "invert(1)" }}>
         {LETTERS.map((letter, i) => {
-          const isN      = letter.dist === 0;
-          const isC      = letter.alt === "c";
-          const delay    = isN ? 0 : 0.1 + (letter.dist - 1) * STEP_S;
-          // emerge-x: from neighbour's left to own left (letter starts behind neighbour)
-          const emergeX  = letter.emergeFrom - letter.left;
-          // gap-offset: extra spread during emerge (lands here, then compresses to 0)
-          const gapOffset = letter.side * letter.dist * GAP_EXTRA;
-
-          const sharedVars = {
-            ["--emerge-x"  as string]: `${emergeX}px`,
-            ["--gap-offset" as string]: `${gapOffset}px`,
+          const isN     = letter.dist === 0;
+          const isC     = letter.alt === "c";
+          const delay   = isN ? 0 : 0.1 + (letter.dist - 1) * STEP_S;
+          const emergeX = letter.neighbourLeft - letter.left;
+          const vars    = {
+            ["--emerge-x"   as string]: `${emergeX}px`,
+            ["--compress-x" as string]: `${letter.compressX}px`,
           };
 
           if (isC) {
+            // Outer div: positioned at c's Figma slot, handles emerge + compress translation
+            // Inner coin wrapper: handles the rotateY flip with preserve-3d
+            // Front: c.png, Back: pinch.png (pre-rotated 180deg) — both backface-hidden
             return (
-              <div key="c" style={{ position: "absolute", left: letter.left, top: letter.top, width: letter.w, height: letter.h }}>
-                <img
-                  src={letter.src}
-                  alt="c"
-                  style={{
-                    ...sharedVars,
-                    display: "block",
-                    width: "100%",
-                    height: "100%",
-                    opacity: 0,
-                    animation: `pinch-emerge ${EMERGE_DUR_S}s cubic-bezier(0.22,1,0.36,1) ${delay}s both, pinch-compress ${COMPRESS_DUR_S}s ease-in-out ${COMPRESS_START_S}s both, flip-out ${FLIP_HALF_S}s ease-in ${FLIP_START_S}s both`,
-                  } as CSSProperties}
-                />
-                {flipped && (
+              <div
+                key="c"
+                style={{
+                  ...vars,
+                  position: "absolute",
+                  left: letter.left,
+                  top: letter.top,
+                  width: letter.w,
+                  height: letter.h,
+                  opacity: 0,
+                  animation: [
+                    `pinch-emerge ${EMERGE_DUR_S}s cubic-bezier(0.22,1,0.36,1) ${delay}s both`,
+                    `pinch-compress ${COMPRESS_DUR_S}s ease-in-out ${COMPRESS_START_S}s both`,
+                  ].join(", "),
+                  perspective: "600px",
+                } as CSSProperties}
+              >
+                {/* coin wrapper — handles only the rotateY flip */}
+                <div style={{
+                  position: "relative",
+                  width: "100%",
+                  height: "100%",
+                  transformStyle: "preserve-3d",
+                  animation: `coin-flip ${FLIP_DUR_S}s ease-in-out ${FLIP_START_S}s both`,
+                }}>
+                  {/* front face: c.png */}
+                  <img
+                    src={letter.src}
+                    alt="c"
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      width: "100%",
+                      height: "100%",
+                      display: "block",
+                      backfaceVisibility: "hidden",
+                      WebkitBackfaceVisibility: "hidden",
+                    }}
+                  />
+                  {/* back face: pinch.png — pre-rotated so it faces back */}
                   <img
                     src="/assets/name/pinch.png"
-                    alt="pinch hand"
+                    alt=""
                     style={{
                       position: "absolute",
                       inset: 0,
@@ -364,10 +380,12 @@ function PinchTitle() {
                       objectFit: "contain",
                       display: "block",
                       filter: "invert(1)",
-                      animation: `flip-in ${FLIP_HALF_S}s ease-out both`,
+                      transform: "rotateY(180deg)",
+                      backfaceVisibility: "hidden",
+                      WebkitBackfaceVisibility: "hidden",
                     }}
                   />
-                )}
+                </div>
               </div>
             );
           }
@@ -378,7 +396,7 @@ function PinchTitle() {
               src={letter.src}
               alt={letter.alt}
               style={{
-                ...sharedVars,
+                ...vars,
                 position: "absolute",
                 left: letter.left,
                 top: letter.top,
@@ -386,7 +404,12 @@ function PinchTitle() {
                 height: letter.h,
                 display: "block",
                 opacity: isN ? 1 : 0,
-                animation: isN ? undefined : `pinch-emerge ${EMERGE_DUR_S}s cubic-bezier(0.22,1,0.36,1) ${delay}s both, pinch-compress ${COMPRESS_DUR_S}s ease-in-out ${COMPRESS_START_S}s both`,
+                animation: isN
+                  ? `pinch-compress ${COMPRESS_DUR_S}s ease-in-out ${COMPRESS_START_S}s both`
+                  : [
+                      `pinch-emerge ${EMERGE_DUR_S}s cubic-bezier(0.22,1,0.36,1) ${delay}s both`,
+                      `pinch-compress ${COMPRESS_DUR_S}s ease-in-out ${COMPRESS_START_S}s both`,
+                    ].join(", "),
               } as CSSProperties}
             />
           );
@@ -475,11 +498,7 @@ export default function Home() {
           >
             <div style={s.cardImg} />
             <div style={s.cardBody}>
-              <div>
-                <div style={s.cardBadge}>{tab === "bounties" ? "Bounty" : "Side Quest"}</div>
-                <div style={s.cardLabel}>{item.label}</div>
-                <div style={s.cardSub}>{item.id}</div>
-              </div>
+              <div style={s.cardLabel}>{item.id}</div>
               <div style={s.cardAmount}>{item.amount}</div>
             </div>
           </button>

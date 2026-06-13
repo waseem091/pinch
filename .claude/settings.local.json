@@ -18,7 +18,9 @@
       "Bash(node -e ' *)",
       "WebFetch(domain:www.figma.com)",
       "Bash(git checkout *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)"
     ]
   }
 }

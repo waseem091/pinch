@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(cmd /c \"dir /a c:\\\\Users\\\\muham\\\\projects\\\\pinch\")",
+      "PowerShell(cmd /c \"dir /a c:\\\\Users\\\\muham\\\\projects\\\\pinch\\\\ui\")",
+      "PowerShell(cmd /c \"dir /a /s c:\\\\Users\\\\muham\\\\projects\\\\pinch\\\\package.json\")",
+      "PowerShell(cmd /c \"dir /a c:\\\\Users\\\\muham\\\\projects\\\\pinch\\\\node_modules\\\\turbo 2>nul\")",
+      "PowerShell(cmd /c \"dir /a c:\\\\Users\\\\muham\\\\projects\\\\pinch\\\\node_modules 2>nul | findstr turbo\")",
+      "PowerShell(cmd /c \"dir /a c:\\\\Users\\\\muham\\\\projects\")",
+      "PowerShell(node -e \"console.log\\(process.version\\)\")",
+      "PowerShell(npm -v)",
+      "mcp__figma__get_design_context",
+      "PowerShell(New-Item -ItemType Directory -Path \"c:\\\\Users\\\\muham\\\\projects\\\\pinch\\\\apps\\\\web\\\\public\\\\assets\\\\glasses\" -Force)",
+      "PowerShell(Copy-Item \"c:\\\\Users\\\\muham\\\\projects\\\\pinch\\\\apps\\\\xr\\\\public\\\\assets\\\\glasses\\\\scene.gltf\" \"c:\\\\Users\\\\muham\\\\projects\\\\pinch\\\\apps\\\\web\\\\public\\\\assets\\\\glasses\\\\scene.gltf\")",
+      "PowerShell(Copy-Item \"c:\\\\Users\\\\muham\\\\projects\\\\pinch\\\\apps\\\\xr\\\\public\\\\assets\\\\glasses\\\\scene.bin\" \"c:\\\\Users\\\\muham\\\\projects\\\\pinch\\\\apps\\\\web\\\\public\\\\assets\\\\glasses\\\\scene.bin\")",
+      "PowerShell(New-Item -ItemType Directory -Path \"c:\\\\Users\\\\muham\\\\projects\\\\pinch\\\\apps\\\\web\\\\lib\" -Force)",
+      "PowerShell(New-Item -ItemType Directory -Path \"c:\\\\Users\\\\muham\\\\projects\\\\pinch\\\\apps\\\\web\\\\components\\\\ui\" -Force)",
+      "Bash(node -e ' *)",
+      "WebFetch(domain:www.figma.com)",
+      "Bash(git checkout *)",
+      "Bash(git add *)"
+    ]
+  }
+}

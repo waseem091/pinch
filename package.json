@@ -1,0 +1,17 @@
+{
+  "name": "pinch",
+  "private": true,
+  "packageManager": "npm@11.16.0",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint"
+  },
+  "devDependencies": {
+    "turbo": "latest"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
+}

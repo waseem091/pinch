@@ -1,0 +1,41 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+@keyframes pinch-emerge {
+  from { transform: translateX(var(--emerge-x, 0)); opacity: 0; }
+  to   { transform: translateX(var(--gap-offset, 0)); opacity: 1; }
+}
+
+@keyframes pinch-compress {
+  from { transform: translateX(var(--gap-offset, 0)); }
+  to   { transform: translateX(0); }
+}
+
+
+@keyframes flip-out {
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
+}
+
+@keyframes flip-in {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+
+html, body {
+  background: #ffeedd;
+  color: #242424;
+  font-family: 'Instrument Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+:root {
+  --bg: #0a0a0a;
+  --card: #141414;
+  --card-hover: #1c1c1c;
+  --border: rgba(255,255,255,0.09);
+  --border-hover: rgba(255,255,255,0.18);
+  --muted: rgba(255,255,255,0.35);
+  --radius-card: 18px;
+  --radius-pill: 999px;
+}

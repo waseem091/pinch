@@ -297,10 +297,6 @@ async function payClaimerOnHedera(quest) {
       ts: Date.now(),
     });
 
-    // Bounty resolved — resume Spectacles hand tracking camera control
-    bountyActive = false;
-    console.log(`[Move]   → Camera RESUMED (bounty resolved)`);
-
     payerClient.close();
   } catch (e) {
     console.error(`[Pay] Error paying ${claimerEvm}:`, e.message);
@@ -369,11 +365,47 @@ function connectBackendSSE() {
 }
 
 
-// ── Relay WebSocket listener (object detection + hand movement) ───────────────
+// ── Post bounty to backend (called when robot sends object_detected) ──────────
+
+let lastBountyPost = 0;
+
+async function postBountyToBackend() {
+  const now = Date.now();
+  if (now - lastBountyPost < 30_000) return;  // 30s cooldown
+  lastBountyPost = now;
+
+  try {
+    const r = await httpFetch(`${BACKEND_API}/api/sim/blocked`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({}),
+    });
+    if (r.ok) console.log(`[Bounty] Posted → pinch-bounty.vercel.app/bounties`);
+    else      console.warn(`[Bounty] Backend returned ${r.status}`);
+  } catch (e) {
+    console.error('[Bounty] Post failed:', e.message);
+    lastBountyPost = 0;
+  }
+}
+
+// ── Relay WebSocket ───────────────────────────────────────────────────────────
 
 function connectRelayWS() {
   const ws = new WebSocket(RELAY_WS);
-  ws.on('open',  () => console.log('[Monitor] Relay WS connected'));
+
+  ws.on('open', () => console.log('[Monitor] Relay WS connected'));
+
+  ws.on('message', (data) => {
+    let msg;
+    try { msg = JSON.parse(data.toString()); } catch { return; }
+    // Robot detected an obstacle → post bounty to backend so it shows on the site
+    if (msg.type === 'object_detected') {
+      const label = (msg.objects || []).map(o => o.class).join(', ') || 'obstacle';
+      console.log(`[Detect] Robot sees: ${label}`);
+      postBountyToBackend();
+    }
+  });
+
   ws.on('close', () => { setTimeout(connectRelayWS, 3000); });
   ws.on('error', (e) => console.error('[Monitor] WS error:', e.message));
 }

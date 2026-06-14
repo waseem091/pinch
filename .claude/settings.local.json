@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Copy-Item \"c:\\\\Users\\\\muham\\\\projects\\\\pinch\\\\frontend\\\\index.html\" \"c:\\\\Users\\\\muham\\\\projects\\\\pinch\\\\frontend\\\\xr.html\")",
+      "PowerShell(Get-ChildItem \"c:\\\\Users\\\\muham\\\\projects\\\\pinch\\\\apps\\\\web\" -Depth 2 | Where-Object { -not $_.FullName.Contains\\('.next'\\) } | Select-Object FullName)",
+      "Bash(ls /mnt/c/Users/muham/projects/pinch/apps/web/)",
+      "Read(//mnt/c/Users/muham/projects/pinch/apps/**)",
+      "PowerShell(cmd /c \"dir /b C:\\\\Users\\\\muham\\\\projects\\\\pinch\\\\apps\\\\web\")",
+      "PowerShell(cmd /c \"dir /b /s C:\\\\Users\\\\muham\\\\projects\\\\pinch\\\\apps\\\\web\" 2>&1)",
+      "PowerShell(findstr /v \".next\")",
+      "PowerShell(cmd /c \"cd C:\\\\Users\\\\muham\\\\projects\\\\pinch\\\\apps\\\\web && npm install\" 2>&1)",
+      "PowerShell(cmd /c \"rd /s /q C:\\\\Users\\\\muham\\\\projects\\\\pinch\\\\apps\\\\web\\\\.next\" 2>&1)",
+      "PowerShell(Get-Process -Id 19720)",
+      "PowerShell(Get-WmiObject Win32_Process -Filter \"ProcessId = 19720\")",
+      "PowerShell(npx --yes live-server --version 2>&1)",
+      "PowerShell(node -e \"require\\('browser-sync'\\)\" 2>&1)",
+      "Bash(Copy-Item \"c:\\\\Users\\\\muham\\\\projects\\\\pinch\\\\frontend\\\\assets\\\\robots\\\\sonny.webp\"    \"c:\\\\Users\\\\muham\\\\projects\\\\pinch\\\\frontend\\\\assets\\\\robots\\\\robo1.webp\")",
+      "Bash(Copy-Item \"c:\\\\Users\\\\muham\\\\projects\\\\pinch\\\\frontend\\\\assets\\\\robots\\\\stackchan.webp\" \"c:\\\\Users\\\\muham\\\\projects\\\\pinch\\\\frontend\\\\assets\\\\robots\\\\robo2.webp\")",
+      "Bash(Copy-Item \"c:\\\\Users\\\\muham\\\\projects\\\\pinch\\\\frontend\\\\assets\\\\robots\\\\r2-d2.webp\"    \"c:\\\\Users\\\\muham\\\\projects\\\\pinch\\\\frontend\\\\assets\\\\robots\\\\robo3.webp\")",
+      "Bash(Copy-Item \"c:\\\\Users\\\\muham\\\\projects\\\\pinch\\\\frontend\\\\assets\\\\robots\\\\wall-e.webp\"   \"c:\\\\Users\\\\muham\\\\projects\\\\pinch\\\\frontend\\\\assets\\\\robots\\\\robo4.webp\")",
+      "Bash(Copy-Item \"c:\\\\Users\\\\muham\\\\projects\\\\pinch\\\\frontend\\\\assets\\\\robots\\\\chitti.webp\"   \"c:\\\\Users\\\\muham\\\\projects\\\\pinch\\\\frontend\\\\assets\\\\robots\\\\robo5.webp\")",
+      "Bash(cp \"c:/Users/muham/projects/pinch/frontend/assets/robots/sonny.webp\"    \"c:/Users/muham/projects/pinch/frontend/assets/robots/robo1.webp\" && \\\\ *)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\muham\\projects\\pinch\\frontend\\assets\\robots"
+    ]
+  }
+}

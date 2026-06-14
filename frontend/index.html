@@ -1,311 +1,527 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pinch – Hand Tracking</title>
+<title>Pinch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  * { box-sizing: border-box; }
-  body { margin:0; background:#000; overflow:hidden; cursor:pointer; font-family:monospace; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; font-family: inherit; }
 
-  #overlay {
-    position:fixed; top:12px; left:12px; z-index:10;
-    color:#0f0; font-size:13px; pointer-events:none;
-    text-shadow:0 0 6px #0f0;
-  }
-  #overlay div { margin:2px 0; }
+:root {
+  --bg: #112211;
+  --accent: #44aa66;
+  --text: #aaccbb;
+  --radius-pill: 999px;
+}
 
-  #tap-msg {
-    position:fixed; top:50%; left:50%;
-    transform:translate(-50%,-50%);
-    color:#fff; font-size:30px; font-family:sans-serif;
-    z-index:20; pointer-events:none; text-align:center;
-    text-shadow:0 2px 12px #000;
+html, body {
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(rgba(170,204,187,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(170,204,187,0.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Letter animations ── */
+@keyframes emerge-p {
+  from { transform: translateX(140px);  opacity: 0; }
+  to   { transform: translateX(0);      opacity: 1; }
+}
+@keyframes emerge-i {
+  from { transform: translateX(90px);   opacity: 0; }
+  to   { transform: translateX(0);      opacity: 1; }
+}
+@keyframes emerge-c {
+  from { transform: translateX(-136px); opacity: 0; }
+  to   { transform: translateX(0);      opacity: 1; }
+}
+@keyframes emerge-h {
+  from { transform: translateX(-128px); opacity: 0; }
+  to   { transform: translateX(0);      opacity: 1; }
+}
+@keyframes compress-p { from { transform: translateX(0); } to { transform: translateX(60px);  } }
+@keyframes compress-i { from { transform: translateX(0); } to { transform: translateX(30px);  } }
+@keyframes compress-c { from { transform: translateX(0); } to { transform: translateX(-30px); } }
+@keyframes compress-h { from { transform: translateX(0); } to { transform: translateX(-60px); } }
+@keyframes coin-flip {
+  from { transform: rotateY(0deg); }
+  to   { transform: rotateY(180deg); }
+}
+
+/* ── Header ── */
+header {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 28px;
+  background-color: rgba(17,34,17,0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.info-btn {
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  border: 1px solid rgba(170,204,187,0.25);
+  background: transparent;
+  color: var(--text);
+  font-size: 16px;
+  font-family: 'DM Mono', monospace;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: -0.03em;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.info-btn:hover { background: var(--text); color: var(--bg); border-color: var(--text); }
+
+.connect-btn {
+  height: 42px;
+  padding: 0 20px;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(170,204,187,0.25);
+  background: transparent;
+  color: var(--text);
+  font-size: 14px;
+  font-family: 'DM Mono', monospace;
+  font-weight: 500;
+  cursor: pointer;
+  letter-spacing: -0.03em;
+  transition: background .15s, color .15s, border-color .15s;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+.connect-btn:hover { background: var(--text); color: var(--bg); border-color: var(--text); }
+
+/* ── Hero ── */
+.hero {
+  padding-top: 110px;
+  padding-bottom: 8px;
+  text-align: center;
+  user-select: none;
+}
+
+/* ── Pinch Title ── */
+.title-outer {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+.title-inner {
+  position: relative;
+  width: 584px;
+  height: 150px;
+  transform: scale(0.48);
+  transform-origin: center;
+  margin-top: -39px;
+  margin-bottom: -39px;
+  margin-left: -151.8px;
+  margin-right: -151.8px;
+}
+@media (min-width: 768px) {
+  .title-inner {
+    transform: scale(0.75);
+    margin-top: -18.75px;
+    margin-bottom: -18.75px;
+    margin-left: -73px;
+    margin-right: -73px;
   }
-  #tap-msg small { display:block; font-size:14px; margin-top:8px; color:#aaa; }
+}
+
+/* letter slots */
+.letter-slot { position: absolute; }
+#slot-p { left: 0;   top: 38px; width: 100px; height: 150px;
+  opacity: 0;
+  animation: emerge-p 0.45s cubic-bezier(0.22,1,0.36,1) 0.2s both;
+}
+#slot-i { left: 140px; top: 15px; width: 50px;  height: 135px;
+  opacity: 0;
+  animation: emerge-i 0.45s cubic-bezier(0.22,1,0.36,1) 0.1s both;
+}
+#slot-n { left: 230px; top: 45px; width: 96px;  height: 105px; }
+#slot-c { left: 366px; top: 45px; width: 88px;  height: 105px;
+  opacity: 0;
+  animation: emerge-c 0.45s cubic-bezier(0.22,1,0.36,1) 0.1s both;
+}
+#slot-h { left: 494px; top: 0px;  width: 90px;  height: 150px;
+  opacity: 0;
+  animation: emerge-h 0.45s cubic-bezier(0.22,1,0.36,1) 0.2s both;
+}
+
+#slot-p img { display: block; width: 100%; height: 100%; animation: compress-p 0.4s ease-in-out 1.25s both; }
+#slot-i img { display: block; width: 100%; height: 100%; animation: compress-i 0.4s ease-in-out 1.25s both; }
+#slot-n img { display: block; width: 100%; height: 100%; }
+#slot-h img { display: block; width: 100%; height: 100%; animation: compress-h 0.4s ease-in-out 1.25s both; }
+
+/* c: compress wrapper + coin-flip */
+#slot-c-compress {
+  width: 100%; height: 100%;
+  animation: compress-c 0.4s ease-in-out 1.25s both;
+  perspective: 600px;
+}
+#slot-c-flip {
+  position: relative;
+  width: 100%; height: 100%;
+  transform-style: preserve-3d;
+  animation: coin-flip 0.35s ease-in-out 1.25s both;
+}
+#slot-c-flip img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+#slot-c-back { transform: rotateY(180deg); object-fit: contain; }
+
+.hero-sub {
+  margin-top: 32px;
+  font-size: 16px;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: -0.03em;
+  color: var(--text);
+  line-height: 1.6;
+}
+
+/* ── Tab toggle ── */
+.toggle-row {
+  display: flex;
+  justify-content: center;
+  padding: 28px 0 32px;
+}
+.toggle-pill {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+  background: rgba(170,204,187,0.06);
+  border: 1px solid rgba(170,204,187,0.12);
+  border-radius: var(--radius-pill);
+  padding: 4px;
+}
+.sliding-bg {
+  position: absolute;
+  top: 4px;
+  height: calc(100% - 8px);
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  pointer-events: none;
+  transition: left 0.25s cubic-bezier(0.4,0,0.2,1), width 0.25s cubic-bezier(0.4,0,0.2,1);
+}
+.tab-btn {
+  position: relative;
+  z-index: 1;
+  padding: 8px 22px;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: -0.03em;
+  color: var(--text);
+  transition: color 0.25s;
+  white-space: nowrap;
+}
+.tab-btn.active { color: var(--bg); }
+
+/* ── Card grid ── */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 300px);
+  gap: 15px;
+  padding: 0 24px 40px;
+  justify-content: center;
+}
+@media (max-width: 1039px) { .card-grid { grid-template-columns: repeat(2, 300px); } }
+@media (max-width: 679px)  { .card-grid { grid-template-columns: 300px; } }
+
+.card {
+  background: #aaccbb;
+  border-radius: 15px;
+  overflow: hidden;
+  width: 300px;
+  height: 225px;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+.card-img {
+  width: 300px;
+  height: 150px;
+  background: #bbddbb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.card-img::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 0 0 2px #aaccbb;
+  border-radius: 15px 15px 0 0;
+  pointer-events: none;
+}
+.card-timestamp {
+  position: absolute;
+  top: 15px; right: 15px;
+  background: rgba(0,0,0,0.3);
+  border-radius: 20px;
+  height: 20px;
+  width: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.card-timestamp span {
+  font-size: 9px;
+  color: white;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+}
+.card-body {
+  width: 300px;
+  height: 75px;
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #aaccbb;
+  flex-shrink: 0;
+}
+.card-label {
+  font-size: 16px;
+  font-weight: 600;
+  color: black;
+  font-family: 'DM Sans', sans-serif;
+  letter-spacing: -0.03em;
+  line-height: normal;
+}
+.card-amount {
+  font-size: 16px;
+  color: black;
+  font-family: 'DM Mono', monospace;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: normal;
+  margin-top: 3px;
+}
+.start-btn {
+  background: #66a66d;
+  color: white;
+  border: none;
+  border-radius: 15px;
+  height: 45px;
+  width: 90px;
+  font-size: 16px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  letter-spacing: -0.03em;
+  flex-shrink: 0;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .15s;
+}
+.start-btn:hover { background: #55955c; }
+
+/* ── About ── */
+.about {
+  max-width: 620px;
+  margin: 0 auto;
+  padding: 48px 24px 80px;
+  font-family: 'DM Mono', monospace;
+  font-size: 14px;
+  line-height: 1.85;
+  color: var(--text);
+}
+.about p { margin-bottom: 1.5em; }
+.about p:last-of-type { margin-bottom: 2.5em; }
+.about a { color: var(--accent); text-decoration: none; cursor: pointer; }
+
+.about-links { display: flex; gap: 12px; margin-bottom: 2.5em; flex-wrap: wrap; }
+.about-link {
+  height: 40px;
+  padding: 0 20px;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(170,204,187,0.25);
+  background: transparent;
+  color: var(--text);
+  font-size: 12px;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: -0.03em;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.about-link:hover { background: var(--text); color: var(--bg); border-color: var(--text); }
 </style>
 </head>
 <body>
 
-<div id="overlay">
-  <div id="out-status">OUT: --</div>
-  <div id="hand-status">Hands: --</div>
-  <div id="fps-status">FPS: --</div>
-  <div id="ws-url" style="color:#888;font-size:10px;max-width:260px;word-break:break-all;"></div>
+<!-- Header -->
+<header>
+  <button class="info-btn" aria-label="Info" onclick="document.getElementById('about').scrollIntoView({behavior:'smooth'})">?</button>
+  <button class="connect-btn">CONNECT WALLET</button>
+</header>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="title-outer">
+    <div class="title-inner">
+      <!-- p -->
+      <div id="slot-p" class="letter-slot">
+        <img src="assets/name/p.png" alt="p">
+      </div>
+      <!-- i -->
+      <div id="slot-i" class="letter-slot">
+        <img src="assets/name/i.png" alt="i">
+      </div>
+      <!-- n (anchor, no animation) -->
+      <div id="slot-n" class="letter-slot">
+        <img src="assets/name/n.png" alt="n" style="display:block">
+      </div>
+      <!-- c (compress + coin-flip) -->
+      <div id="slot-c" class="letter-slot">
+        <div id="slot-c-compress">
+          <div id="slot-c-flip">
+            <img src="assets/name/c.png" alt="c">
+            <img id="slot-c-back" src="assets/name/pinch.png" alt="">
+          </div>
+        </div>
+      </div>
+      <!-- h -->
+      <div id="slot-h" class="letter-slot">
+        <img src="assets/name/h.png" alt="h">
+      </div>
+    </div>
+  </div>
+  <p class="hero-sub">Robots are in a pinch.<br>Humans, you're up.</p>
 </div>
-<div id="tap-msg">
-  TAP TO START
-  <small>WebXR Hand Tracking</small>
+
+<!-- Tab toggle -->
+<div class="toggle-row">
+  <div class="toggle-pill" id="toggle-pill">
+    <div class="sliding-bg" id="sliding-bg"></div>
+    <button class="tab-btn active" id="btn-bounties" onclick="setTab('bounties')">Bounties</button>
+    <button class="tab-btn" id="btn-sidequests" onclick="setTab('sidequests')">Side Quests</button>
+  </div>
 </div>
 
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.181.0/build/three.module.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.181.0/examples/jsm/"
-  }
-}
-</script>
+<!-- Card grid -->
+<div class="card-grid" id="card-grid"></div>
 
-<script type="module">
-import * as THREE from 'three';
-import { ARButton } from 'three/addons/webxr/ARButton.js';
+<!-- About -->
+<section class="about" id="about">
+  <p>
+    Autonomous agents are good at operating independently. Until they
+    hit something they can&apos;t resolve — a physical edge case, an
+    environment they haven&apos;t seen, a decision that needs a human
+    in the loop. Most systems stop there.
+  </p>
+  <p>
+    Pinch doesn&apos;t stop. When a robot hits a limit, it posts a bounty
+    from its own wallet. A human claims it, opens a browser, and takes
+    control — hand tracking over WebXR drives the robot live. Once the
+    blockage clears, the robot pays out instantly, settled onchain. No
+    card, no bank, no intermediary.
+  </p>
+  <p>
+    There are systems built for agents to talk to agents. Systems built
+    for humans to talk to agents. Who is building the layer where
+    <a href="#" onclick="event.preventDefault();window.scrollTo({top:0,behavior:'smooth'})">agents pay humans</a>
+    for physical presence?
+  </p>
+  <p>
+    Pinch is that layer: real-time hand tracking as the input primitive
+    for an agentic economy. A robot posts a bounty, a human shows up,
+    a transaction clears — presence-native, verified, committed onchain
+    the moment the job is done.
+  </p>
+  <div class="about-links">
+    <a class="about-link" href="https://github.com/waseem091/pinch" target="_blank" rel="noopener noreferrer">GITHUB</a>
+    <a class="about-link" href="https://x.com/waseemweb" target="_blank" rel="noopener noreferrer">X</a>
+  </div>
+</section>
 
-// ---------------------------------------------------------------------------
-// WebSocket destination.
-// Priority: ?ws=<url> query param → permanent Cloudflare Worker relay.
-// ---------------------------------------------------------------------------
-const DEFAULT_WS = 'wss://pinch-relay.jenil-panchal10.workers.dev/ws';
-const params = new URLSearchParams(location.search);
-const WS_URL = params.get('ws') || DEFAULT_WS;
-
-// Persistent robot identity — generated once per device, survives reloads.
-function getRobotId() {
-  let id = localStorage.getItem('pinch-robot-id');
-  if (!id) {
-    id = 'robot-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
-    localStorage.setItem('pinch-robot-id', id);
-  }
-  return id;
-}
-const ROBOT_ID = getRobotId();
-
-document.getElementById('ws-url').textContent = 'WS: ' + WS_URL;
-
-let ws = null;
-let frameCount = 0;
-
-function connectWS() {
-  try {
-    ws = new WebSocket(WS_URL);
-  } catch (e) {
-    document.getElementById('out-status').textContent = 'OUT: bad URL';
-    return;
-  }
-  ws.onopen  = () => { document.getElementById('out-status').textContent = 'OUT: connected'; };
-  ws.onerror = () => { document.getElementById('out-status').textContent = 'OUT: error'; };
-  ws.onclose = () => {
-    document.getElementById('out-status').textContent = 'OUT: reconnecting…';
-    setTimeout(connectWS, 2000);
-  };
-}
-
-connectWS();
-
-function sendHandData(payload) {
-  if (ws && ws.readyState === WebSocket.OPEN) {
-    try { ws.send(JSON.stringify(payload)); } catch (_) {}
-  }
-}
-
-// Heartbeat: once a second, report page/session state.
-let xrActive = false;
-let lastHandCounts = { left: 0, right: 0 };
-setInterval(() => {
-  sendHandData({
-    type: 'status',
-    robotId: ROBOT_ID,
-    ts: Date.now(),
-    xr: xrActive,
-    left: lastHandCounts.left,
-    right: lastHandCounts.right,
-  });
-}, 1000);
-
-// ---------------------------------------------------------------------------
-// Three.js / WebXR setup
-// ---------------------------------------------------------------------------
-const renderer = new THREE.WebGLRenderer({
-  antialias: false, stencil: false, depth: true,
-  powerPreference: 'high-performance', alpha: true,
-});
-renderer.setPixelRatio(window.devicePixelRatio);
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.xr.enabled = true;
-renderer.outputColorSpace = THREE.SRGBColorSpace;
-document.body.appendChild(renderer.domElement);
-
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.01, 50);
-camera.position.set(0, 1.6, 3);
-scene.add(camera);
-scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 1.5));
-
-// Hidden AR button – tapping the page clicks it.
-const xrButton = ARButton.createButton(renderer, { optionalFeatures: ['hand-tracking'] });
-xrButton.style.display = 'none';
-document.body.appendChild(xrButton);
-
-document.body.addEventListener('click', () => {
-  document.getElementById('tap-msg').style.display = 'none';
-  xrButton.click();
-});
-
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-});
-
-// getHand() registers the hand with the XR session; we don't attach models.
-renderer.xr.getHand(0);
-renderer.xr.getHand(1);
-
-renderer.xr.addEventListener('sessionstart', () => { xrActive = true; });
-renderer.xr.addEventListener('sessionend',   () => { xrActive = false; });
-
-// ---------------------------------------------------------------------------
-// 25 canonical WebXR joint names (order matches the payload spec)
-// ---------------------------------------------------------------------------
-// Note: the WebXR thumb has no "intermediate" phalanx — 4 joints, not 5.
-const JOINTS = [
-  'wrist',
-  'thumb-metacarpal','thumb-phalanx-proximal','thumb-phalanx-distal','thumb-tip',
-  'index-finger-metacarpal','index-finger-phalanx-proximal','index-finger-phalanx-intermediate','index-finger-phalanx-distal','index-finger-tip',
-  'middle-finger-metacarpal','middle-finger-phalanx-proximal','middle-finger-phalanx-intermediate','middle-finger-phalanx-distal','middle-finger-tip',
-  'ring-finger-metacarpal','ring-finger-phalanx-proximal','ring-finger-phalanx-intermediate','ring-finger-phalanx-distal','ring-finger-tip',
-  'pinky-finger-metacarpal','pinky-finger-phalanx-proximal','pinky-finger-phalanx-intermediate','pinky-finger-phalanx-distal','pinky-finger-tip',
+<script>
+const BOUNTIES = [
+  { id: "robo1", name: "Sonny",     amount: "0.01 ETH", label: "Patrol Zone A",    time: "51m ago" },
+  { id: "robo2", name: "Stackchan", amount: "0.02 ETH", label: "Deliver Package",  time: "2h ago"  },
+  { id: "robo3", name: "R2-D2",     amount: "0.03 ETH", label: "Map Corridor 3",   time: "4h ago"  },
+  { id: "robo4", name: "Wall-E",    amount: "0.04 ETH", label: "Scan & Report",    time: "6h ago"  },
+  { id: "robo5", name: "Chitti",    amount: "0.05 ETH", label: "Secure Perimeter", time: "9h ago"  },
+  { id: "robo6", name: "C-3PO",     amount: "0.06 ETH", label: "Retrieve Object",  time: "12h ago" },
+];
+const SIDE_QUESTS = [
+  { id: "robo1", name: "Sonny",     amount: "0.01 ETH", label: "Wave at humans",  time: "22m ago" },
+  { id: "robo2", name: "Stackchan", amount: "0.02 ETH", label: "Do a lil spin",   time: "1h ago"  },
+  { id: "robo3", name: "R2-D2",     amount: "0.03 ETH", label: "Find the cat",    time: "3h ago"  },
+  { id: "robo4", name: "Wall-E",    amount: "0.04 ETH", label: "Vibe check",      time: "5h ago"  },
+  { id: "robo5", name: "Chitti",    amount: "0.05 ETH", label: "Touch grass",     time: "8h ago"  },
+  { id: "robo6", name: "C-3PO",     amount: "0.06 ETH", label: "Befriend pigeon", time: "11h ago" },
 ];
 
-// Bone connectivity (index pairs into JOINTS) for the skeleton lines.
-const BONES = [
-  [0,1],[1,2],[2,3],[3,4],            // thumb
-  [0,5],[5,6],[6,7],[7,8],[8,9],      // index
-  [0,10],[10,11],[11,12],[12,13],[13,14], // middle
-  [0,15],[15,16],[16,17],[17,18],[18,19], // ring
-  [0,20],[20,21],[21,22],[22,23],[23,24], // pinky
-];
+let currentTab = 'bounties';
 
-// ---------------------------------------------------------------------------
-// Visible skeleton: 25 joint spheres + bone lines per hand
-// ---------------------------------------------------------------------------
-function makeSkeleton(color) {
-  const group = new THREE.Group();
-  group.visible = false;
-
-  const sphereGeo = new THREE.SphereGeometry(0.008, 8, 8);
-  const sphereMat = new THREE.MeshBasicMaterial({ color });
-  const spheres = [];
-  for (let i = 0; i < JOINTS.length; i++) {
-    const s = new THREE.Mesh(sphereGeo, sphereMat);
-    s.visible = false;
-    group.add(s);
-    spheres.push(s);
-  }
-
-  const linePositions = new Float32Array(BONES.length * 2 * 3);
-  const lineGeo = new THREE.BufferGeometry();
-  lineGeo.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
-  const lines = new THREE.LineSegments(lineGeo, new THREE.LineBasicMaterial({ color }));
-  lines.frustumCulled = false;
-  group.add(lines);
-
-  scene.add(group);
-  return { group, spheres, lines, linePositions };
+function renderCards(items) {
+  const grid = document.getElementById('card-grid');
+  grid.innerHTML = items.map(item => `
+    <div class="card">
+      <div class="card-img">
+        <img src="assets/robots/${item.id}.webp" alt="${item.id}" style="width:100%;height:100%;object-fit:cover;display:block;">
+        <div class="card-timestamp"><span>${item.time}</span></div>
+      </div>
+      <div class="card-body">
+        <div>
+          <div class="card-label">${item.name}</div>
+          <div class="card-amount">💰${item.amount}</div>
+        </div>
+        <a class="start-btn" href="/xr.html">Start</a>
+      </div>
+    </div>
+  `).join('');
 }
 
-const skeletons = {
-  left:  makeSkeleton(0x00ff00),
-  right: makeSkeleton(0x00ccff),
-};
+function setTab(tab) {
+  currentTab = tab;
+  const btnBounties = document.getElementById('btn-bounties');
+  const btnSideQuests = document.getElementById('btn-sidequests');
+  const slidingBg = document.getElementById('sliding-bg');
 
-function updateSkeleton(skel, handData) {
-  if (!handData) { skel.group.visible = false; return; }
-  skel.group.visible = true;
+  btnBounties.classList.toggle('active', tab === 'bounties');
+  btnSideQuests.classList.toggle('active', tab === 'sidequests');
 
-  const { joints } = handData;
-  for (let i = 0; i < joints.length; i++) {
-    const j = joints[i];
-    skel.spheres[i].visible = !!j;
-    if (j) skel.spheres[i].position.set(j.pos[0], j.pos[1], j.pos[2]);
-  }
+  const activeBtn = tab === 'bounties' ? btnBounties : btnSideQuests;
+  slidingBg.style.left = activeBtn.offsetLeft + 'px';
+  slidingBg.style.width = activeBtn.offsetWidth + 'px';
 
-  let p = 0;
-  for (const [a, b] of BONES) {
-    const ja = joints[a], jb = joints[b];
-    if (ja && jb) {
-      skel.linePositions[p++] = ja.pos[0]; skel.linePositions[p++] = ja.pos[1]; skel.linePositions[p++] = ja.pos[2];
-      skel.linePositions[p++] = jb.pos[0]; skel.linePositions[p++] = jb.pos[1]; skel.linePositions[p++] = jb.pos[2];
-    } else {
-      // collapse untracked bones to a point so they don't draw
-      for (let k = 0; k < 6; k++) skel.linePositions[p++] = 0;
-    }
-  }
-  skel.lines.geometry.attributes.position.needsUpdate = true;
+  renderCards(tab === 'bounties' ? BOUNTIES : SIDE_QUESTS);
 }
 
-// ---------------------------------------------------------------------------
-// Extract joint poses for one hand from the current XRFrame
-// ---------------------------------------------------------------------------
-function extractHand(frame, inputSource, refSpace) {
-  if (!inputSource?.hand) return null;
-
-  const joints = [];
-  let tracked = 0;
-
-  for (const name of JOINTS) {
-    const jointSpace = inputSource.hand.get(name);
-    if (jointSpace) {
-      const pose = frame.getJointPose(jointSpace, refSpace);
-      if (pose) {
-        const { position: p, orientation: r } = pose.transform;
-        joints.push({ pos: [p.x, p.y, p.z], rot: [r.x, r.y, r.z, r.w] });
-        tracked++;
-        continue;
-      }
-    }
-    joints.push(null);
-  }
-
-  return tracked > 0 ? { joints, n: tracked } : null;
-}
-
-// ---------------------------------------------------------------------------
-// Animation loop
-// ---------------------------------------------------------------------------
-let lastFpsTime = performance.now();
-let fpsCount = 0;
-
-renderer.setAnimationLoop((time, frame) => {
-  // FPS counter
-  fpsCount++;
-  if (time - lastFpsTime >= 1000) {
-    document.getElementById('fps-status').textContent = `FPS: ${fpsCount}`;
-    fpsCount = 0;
-    lastFpsTime = time;
-  }
-
-  const refSpace = frame ? renderer.xr.getReferenceSpace() : null;
-
-  if (!frame || !refSpace) {
-    renderer.render(scene, camera);
-    return;
-  }
-
-  const payload = { frame: frameCount++, ts: Date.now() };
-  let anyTracked = false;
-
-  for (const src of frame.session.inputSources) {
-    const handData = extractHand(frame, src, refSpace);
-    if (!handData) continue;
-    const key = src.handedness === 'right' ? 'right' : 'left';
-    payload[key] = handData;
-    anyTracked = true;
-  }
-
-  updateSkeleton(skeletons.left,  payload.left);
-  updateSkeleton(skeletons.right, payload.right);
-
-  renderer.render(scene, camera);
-
-  // Overlay
-  const lStr = payload.left  ? `L:${payload.left.n}`  : 'L:--';
-  const rStr = payload.right ? `R:${payload.right.n}` : 'R:--';
-  document.getElementById('hand-status').textContent = `Hands: ${lStr} ${rStr}`;
-  lastHandCounts.left  = payload.left  ? payload.left.n  : 0;
-  lastHandCounts.right = payload.right ? payload.right.n : 0;
-
-  if (anyTracked) sendHandData({ ...payload, robotId: ROBOT_ID });
+// Init sliding pill on load
+window.addEventListener('load', () => {
+  const btn = document.getElementById('btn-bounties');
+  const bg = document.getElementById('sliding-bg');
+  bg.style.transition = 'none';
+  bg.style.left = btn.offsetLeft + 'px';
+  bg.style.width = btn.offsetWidth + 'px';
+  setTimeout(() => { bg.style.transition = ''; }, 50);
+  renderCards(BOUNTIES);
 });
 </script>
 </body>

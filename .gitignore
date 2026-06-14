@@ -1,5 +1,6 @@
 node_modules/
 .env
+.env.local
 .vercel/
 .vercel
 robot-wallets.json
@@ -7,3 +8,7 @@ public/
 frontend/bounties-app/.env.local
 frontend/bounties-app/node_modules/
 frontend/bounties-app/dist/
+
+# Next.js build output
+.next/
+out/

@@ -10,24 +10,25 @@ interface Item {
   id: string;
   amount: string;
   label: string;
+  time: string;
 }
 
 const BOUNTIES: Item[] = [
-  { id: "robo1", amount: "10 USDC", label: "Patrol Zone A" },
-  { id: "robo2", amount: "20 USDC", label: "Deliver Package" },
-  { id: "robo3", amount: "30 USDC", label: "Map Corridor 3" },
-  { id: "robo4", amount: "40 USDC", label: "Scan & Report" },
-  { id: "robo5", amount: "50 USDC", label: "Secure Perimeter" },
-  { id: "robo6", amount: "60 USDC", label: "Retrieve Object" },
+  { id: "robo1", amount: "0.01 ETH", label: "Patrol Zone A",    time: "51m ago" },
+  { id: "robo2", amount: "0.02 ETH", label: "Deliver Package",  time: "2h ago"  },
+  { id: "robo3", amount: "0.03 ETH", label: "Map Corridor 3",   time: "4h ago"  },
+  { id: "robo4", amount: "0.04 ETH", label: "Scan & Report",    time: "6h ago"  },
+  { id: "robo5", amount: "0.05 ETH", label: "Secure Perimeter", time: "9h ago"  },
+  { id: "robo6", amount: "0.06 ETH", label: "Retrieve Object",  time: "12h ago" },
 ];
 
 const SIDE_QUESTS: Item[] = [
-  { id: "robo1", amount: "10 USDC", label: "Wave at humans" },
-  { id: "robo2", amount: "20 USDC", label: "Do a lil spin" },
-  { id: "robo3", amount: "30 USDC", label: "Find the cat" },
-  { id: "robo4", amount: "40 USDC", label: "Vibe check" },
-  { id: "robo5", amount: "50 USDC", label: "Touch grass" },
-  { id: "robo6", amount: "60 USDC", label: "Befriend pigeon" },
+  { id: "robo1", amount: "0.01 ETH", label: "Wave at humans",  time: "22m ago" },
+  { id: "robo2", amount: "0.02 ETH", label: "Do a lil spin",   time: "1h ago"  },
+  { id: "robo3", amount: "0.03 ETH", label: "Find the cat",    time: "3h ago"  },
+  { id: "robo4", amount: "0.04 ETH", label: "Vibe check",      time: "5h ago"  },
+  { id: "robo5", amount: "0.05 ETH", label: "Touch grass",     time: "8h ago"  },
+  { id: "robo6", amount: "0.06 ETH", label: "Befriend pigeon", time: "11h ago" },
 ];
 
 const BG = "#112211";
@@ -61,13 +62,14 @@ const s: Record<string, CSSProperties> = {
     borderRadius: "50%",
     border: "1px solid rgba(170,204,187,0.25)",
     background: "transparent",
-    color: "rgba(170,204,187,0.5)",
+    color: TEXT,
     fontSize: 16,
     fontFamily: "'DM Mono', monospace",
     cursor: "pointer",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
+    letterSpacing: "-0.03em",
     transition: "border-color .2s, color .2s",
   },
   connectBtn: {
@@ -76,12 +78,12 @@ const s: Record<string, CSSProperties> = {
     borderRadius: 999,
     border: "1px solid rgba(170,204,187,0.25)",
     background: "transparent",
-    color: "rgba(170,204,187,0.65)",
+    color: TEXT,
     fontSize: 14,
     fontFamily: "'DM Mono', monospace",
     fontWeight: 500,
     cursor: "pointer",
-    letterSpacing: "-0.01em",
+    letterSpacing: "-0.03em",
     transition: "border-color .2s, color .2s",
   },
   hero: {
@@ -94,15 +96,15 @@ const s: Record<string, CSSProperties> = {
     fontFamily: "'DM Sans', sans-serif",
     fontSize: "clamp(72px, 14vw, 160px)",
     lineHeight: 1,
-    letterSpacing: "-0.04em",
+    letterSpacing: "-0.03em",
     color: TEXT,
     margin: 0,
   },
   subtitle: {
     marginTop: 10,
-    color: "rgba(170,204,187,0.4)",
+    color: TEXT,
     fontSize: 13,
-    letterSpacing: "0.04em",
+    letterSpacing: "-0.03em",
   },
   toggleRow: {
     display: "flex",
@@ -137,63 +139,93 @@ const s: Record<string, CSSProperties> = {
     fontSize: 14,
     fontWeight: 500,
     fontFamily: "'DM Mono', monospace",
-    letterSpacing: "-0.01em",
+    letterSpacing: "-0.03em",
     transition: "color 0.25s",
     whiteSpace: "nowrap",
   },
   card: {
-    background: "rgba(170,204,187,0.04)",
-    border: "1px solid rgba(170,204,187,0.1)",
-    borderRadius: 18,
+    background: "white",
+    borderRadius: 15,
     overflow: "hidden",
-    cursor: "pointer",
-    transition: "border-color .2s, background .2s",
+    width: 300,
+    height: 225,
+    border: "none",
+    padding: 0,
     textAlign: "left",
-    width: "100%",
+    display: "flex",
+    flexDirection: "column",
   },
   cardImg: {
-    width: "100%",
-    aspectRatio: "4/3",
-    background: "linear-gradient(135deg, rgba(68,170,102,0.12) 0%, rgba(68,170,102,0.06) 100%)",
-    display: "block",
+    width: 300,
+    height: 150,
+    background: "#bbddbb",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+    flexShrink: 0,
+    overflow: "hidden",
+  },
+  cardTimestamp: {
+    position: "absolute",
+    top: 15,
+    right: 15,
+    background: "rgba(0,0,0,0.3)",
+    borderRadius: 20,
+    height: 20,
+    width: 60,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cardTimestampText: {
+    fontSize: 9,
+    color: "white",
+    fontFamily: "'DM Sans', sans-serif",
+    fontWeight: 500,
+    letterSpacing: "-0.03em",
   },
   cardBody: {
-    padding: "12px 16px 14px",
+    width: 300,
+    height: 75,
+    padding: 15,
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: 12,
+    background: "white",
+    flexShrink: 0,
+    boxSizing: "border-box",
   },
   cardLabel: {
-    fontSize: 14,
-    fontWeight: 500,
-    color: TEXT,
-    letterSpacing: "-0.01em",
-  },
-  cardSub: {
-    fontSize: 12,
-    color: "rgba(170,204,187,0.4)",
-    marginTop: 2,
+    fontSize: 16,
+    fontWeight: 600,
+    color: "black",
+    fontFamily: "'DM Sans', sans-serif",
+    letterSpacing: "-0.03em",
+    lineHeight: "normal",
   },
   cardAmount: {
-    fontSize: 14,
-    fontWeight: 500,
-    color: ACCENT,
+    fontSize: 16,
+    color: "black",
     fontFamily: "'DM Mono', monospace",
-    letterSpacing: "-0.02em",
-    fontVariantNumeric: "tabular-nums",
-    flexShrink: 0,
-  },
-  cardBadge: {
-    display: "inline-block",
-    fontSize: 11,
     fontWeight: 500,
-    color: "rgba(170,204,187,0.4)",
-    border: "1px solid rgba(170,204,187,0.15)",
-    borderRadius: 999,
-    padding: "2px 8px",
-    marginBottom: 4,
-    letterSpacing: "0.01em",
+    letterSpacing: "-0.03em",
+    lineHeight: "normal",
+    marginTop: 3,
+  },
+  startBtn: {
+    background: "#66a66d",
+    color: "white",
+    border: "none",
+    borderRadius: 15,
+    height: 45,
+    width: 90,
+    fontSize: 16,
+    fontFamily: "'DM Sans', sans-serif",
+    fontWeight: 500,
+    cursor: "pointer",
+    letterSpacing: "-0.03em",
+    flexShrink: 0,
   },
   overlay: {
     position: "fixed",
@@ -223,7 +255,7 @@ const s: Record<string, CSSProperties> = {
     borderRadius: "50%",
     border: "none",
     background: "rgba(170,204,187,0.07)",
-    color: "rgba(170,204,187,0.45)",
+    color: TEXT,
     fontSize: 16,
     cursor: "pointer",
     display: "flex",
@@ -245,13 +277,13 @@ const s: Record<string, CSSProperties> = {
     fontSize: 17,
     fontWeight: 600,
     color: TEXT,
-    letterSpacing: "-0.02em",
+    letterSpacing: "-0.03em",
   },
   modalMeta: {
     fontSize: 13,
-    color: "rgba(170,204,187,0.4)",
+    color: TEXT,
     marginTop: 4,
-    letterSpacing: "-0.01em",
+    letterSpacing: "-0.03em",
   },
   modalActions: {
     display: "flex",
@@ -269,7 +301,7 @@ const s: Record<string, CSSProperties> = {
     fontWeight: 600,
     fontFamily: "'DM Sans', sans-serif",
     cursor: "pointer",
-    letterSpacing: "-0.01em",
+    letterSpacing: "-0.03em",
   },
   btnSecondary: {
     height: 44,
@@ -277,12 +309,12 @@ const s: Record<string, CSSProperties> = {
     borderRadius: 999,
     border: "1px solid rgba(170,204,187,0.15)",
     background: "transparent",
-    color: "rgba(170,204,187,0.45)",
+    color: TEXT,
     fontSize: 14,
     fontWeight: 500,
     fontFamily: "'DM Sans', sans-serif",
     cursor: "pointer",
-    letterSpacing: "-0.01em",
+    letterSpacing: "-0.03em",
   },
 };
 
@@ -440,18 +472,18 @@ function AboutOverlay({ onClose }: { onClose: () => void }) {
       }}
     >
       <div style={{ flex: 1, fontFamily: "'DM Mono', monospace", fontSize: 14, lineHeight: 1.75, color: TEXT, display: "flex", flexDirection: "column", gap: 0 }}>
-        <p style={{ marginBottom: "1.5em" }}>
+        <p style={{ marginBottom: "1.5em", letterSpacing: "-0.03em" }}>
           Builders get feedback on the idea, the pitch, the UI. Rarely on the
           workflow: whether the steps connect, whether users can get from A to
           B without hitting a wall.
         </p>
-        <p style={{ marginBottom: "1.5em" }}>
+        <p style={{ marginBottom: "1.5em", letterSpacing: "-0.03em" }}>
           A screen can look right and still send users in circles. Pages that
           don&apos;t connect, flows with no exit, steps that assume context the
           user never had. These aren&apos;t design bugs, but structure bugs: hidden
           until one maps it.
         </p>
-        <p style={{ marginBottom: "1.5em" }}>
+        <p style={{ marginBottom: "1.5em", letterSpacing: "-0.03em" }}>
           There are tools helping you enhance your idea. Tools helping you
           enhance your pitch. Who is helping you{" "}
           <a href="#" style={{ color: ACCENT, textDecoration: "underline" }}>
@@ -459,7 +491,7 @@ function AboutOverlay({ onClose }: { onClose: () => void }) {
           </a>{" "}
           your workflow?
         </p>
-        <p style={{ marginBottom: "2.5em" }}>
+        <p style={{ marginBottom: "2.5em", letterSpacing: "-0.03em" }}>
           navGraph turns your app into a graph and answers those questions:
           specific recommendations, before you write a single line of code.
           Not a side project, but a helping hand to ensure your project works.
@@ -491,7 +523,7 @@ function AboutOverlay({ onClose }: { onClose: () => void }) {
               color: TEXT,
               fontSize: 12,
               fontFamily: "'DM Mono', monospace",
-              letterSpacing: "0.05em",
+              letterSpacing: "-0.03em",
               cursor: "pointer",
               display: "inline-flex",
               alignItems: "center",
@@ -510,7 +542,7 @@ function AboutOverlay({ onClose }: { onClose: () => void }) {
         </div>
 
         {/* Footer */}
-        <p style={{ fontSize: 12, fontFamily: "'DM Mono', monospace", letterSpacing: "0.04em", color: "rgba(170,204,187,0.5)", textTransform: "uppercase" }}>
+        <p style={{ fontSize: 12, fontFamily: "'DM Mono', monospace", letterSpacing: "-0.03em", color: TEXT, textTransform: "uppercase" }}>
           this is an open source{" "}
           <a
             href="https://github.com/waseem091/pinch"
@@ -569,6 +601,9 @@ export default function Home() {
       {/* Hero */}
       <div style={s.hero}>
         <PinchTitle />
+        <p style={{ marginTop: 32, fontSize: 16, fontFamily: "'DM Mono', monospace", letterSpacing: "-0.03em", color: TEXT }}>
+          Help a robot.<br />Get paid on the spot.
+        </p>
       </div>
 
       {/* Toggle */}
@@ -577,14 +612,14 @@ export default function Home() {
           <div ref={pillRef} style={{ ...s.slidingBg, ...pillStyle }} />
           <button
             ref={btnBounties}
-            style={{ ...s.tabBtn, color: tab === "bounties" ? BG : "rgba(170,204,187,0.4)", background: tab === "bounties" && !pillStyle.width ? ACCENT : "transparent" }}
+            style={{ ...s.tabBtn, color: tab === "bounties" ? BG : TEXT, background: tab === "bounties" && !pillStyle.width ? ACCENT : "transparent" }}
             onClick={() => setTab("bounties")}
           >
             Bounties
           </button>
           <button
             ref={btnSideQuests}
-            style={{ ...s.tabBtn, color: tab === "sidequests" ? BG : "rgba(170,204,187,0.4)", background: tab === "sidequests" && !pillStyle.width ? ACCENT : "transparent" }}
+            style={{ ...s.tabBtn, color: tab === "sidequests" ? BG : TEXT, background: tab === "sidequests" && !pillStyle.width ? ACCENT : "transparent" }}
             onClick={() => setTab("sidequests")}
           >
             Side Quests
@@ -595,25 +630,20 @@ export default function Home() {
       {/* Grid */}
       <div className="card-grid">
         {items.map((item) => (
-          <button
-            key={item.id}
-            style={s.card}
-            onClick={() => setSelected(item)}
-            onMouseEnter={e => {
-              (e.currentTarget as HTMLElement).style.borderColor = "rgba(170,204,187,0.22)";
-              (e.currentTarget as HTMLElement).style.background = "rgba(170,204,187,0.08)";
-            }}
-            onMouseLeave={e => {
-              (e.currentTarget as HTMLElement).style.borderColor = "rgba(170,204,187,0.1)";
-              (e.currentTarget as HTMLElement).style.background = "rgba(170,204,187,0.04)";
-            }}
-          >
-            <div style={s.cardImg} />
-            <div style={s.cardBody}>
-              <div style={s.cardLabel}>{item.id}</div>
-              <div style={s.cardAmount}>{item.amount}</div>
+          <div key={item.id} style={s.card}>
+            <div style={s.cardImg}>
+              <div style={s.cardTimestamp}>
+                <span style={s.cardTimestampText}>{item.time}</span>
+              </div>
             </div>
-          </button>
+            <div style={s.cardBody}>
+              <div>
+                <div style={s.cardLabel}>{item.id}</div>
+                <div style={s.cardAmount}>💰{item.amount}</div>
+              </div>
+              <button style={s.startBtn} onClick={() => setSelected(item)}>Start</button>
+            </div>
+          </div>
         ))}
       </div>
 

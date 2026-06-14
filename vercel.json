@@ -2,11 +2,14 @@
   "version": 2,
   "name": "pinch",
   "builds": [
-    { "src": "frontend/*.html", "use": "@vercel/static" }
+    { "src": "frontend/**", "use": "@vercel/static" }
   ],
   "routes": [
-    { "src": "/bounties", "dest": "/frontend/bounties.html" },
-    { "src": "/(.*)",     "dest": "/frontend/index.html" }
+    { "src": "/bounties",    "dest": "/frontend/bounties.html" },
+    { "src": "/xr",         "dest": "/frontend/xr.html" },
+    { "src": "/xr.html",    "dest": "/frontend/xr.html" },
+    { "src": "/assets/(.*)", "dest": "/frontend/assets/$1" },
+    { "src": "/(.*)",        "dest": "/frontend/index.html" }
   ],
   "headers": [
     {

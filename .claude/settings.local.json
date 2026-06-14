@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Copy-Item \"c:\\\\Users\\\\muham\\\\projects\\\\pinch\\\\frontend\\\\index.html\" \"c:\\\\Users\\\\muham\\\\projects\\\\pinch\\\\frontend\\\\xr.html\")",
+      "PowerShell(Get-ChildItem \"c:\\\\Users\\\\muham\\\\projects\\\\pinch\\\\apps\\\\web\" -Depth 2 | Where-Object { -not $_.FullName.Contains\\('.next'\\) } | Select-Object FullName)",
+      "Bash(ls /mnt/c/Users/muham/projects/pinch/apps/web/)",
+      "Read(//mnt/c/Users/muham/projects/pinch/apps/**)",
+      "PowerShell(cmd /c \"dir /b C:\\\\Users\\\\muham\\\\projects\\\\pinch\\\\apps\\\\web\")",
+      "PowerShell(cmd /c \"dir /b /s C:\\\\Users\\\\muham\\\\projects\\\\pinch\\\\apps\\\\web\" 2>&1)",
+      "PowerShell(findstr /v \".next\")",
+      "PowerShell(cmd /c \"cd C:\\\\Users\\\\muham\\\\projects\\\\pinch\\\\apps\\\\web && npm install\" 2>&1)",
+      "PowerShell(cmd /c \"rd /s /q C:\\\\Users\\\\muham\\\\projects\\\\pinch\\\\apps\\\\web\\\\.next\" 2>&1)"
+    ]
+  }
+}

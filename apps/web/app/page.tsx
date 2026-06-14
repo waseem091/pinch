@@ -1,9 +1,22 @@
 "use client";
 
-import { useState, useRef, useLayoutEffect, CSSProperties } from "react";
-import { UserPill } from "@privy-io/react-auth/ui";
+import { useState, useRef, useLayoutEffect, useCallback, useEffect, CSSProperties } from "react";
+import { IDKitWidget, VerificationLevel } from "@worldcoin/idkit";
+
+const API          = "https://pinch-ie4r.onrender.com";
+const WORKER       = "https://pinch-relay.jenil-panchal10.workers.dev";
+const WORLD_APP_ID = process.env.NEXT_PUBLIC_WORLD_APP_ID ?? "";
 
 type Tab = "bounties" | "sidequests";
+
+interface Quest {
+  id: string;
+  name: string;
+  status: "available" | "claimed" | "resolved";
+  bounty: number;
+  postedAt: string;
+  imageUrl?: string;
+}
 
 interface Item {
   id: string;
@@ -167,7 +180,6 @@ const s: Record<string, CSSProperties> = {
     position: "relative",
     flexShrink: 0,
     overflow: "hidden",
-    boxShadow: "inset 0 0 0 2px #aaccbb",
   },
   cardTimestamp: {
     position: "absolute",
@@ -195,7 +207,7 @@ const s: Record<string, CSSProperties> = {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    background: "white",
+    background: "#aaccbb",
     flexShrink: 0,
     boxSizing: "border-box",
   },
@@ -368,13 +380,152 @@ function PinchTitle() {
   );
 }
 
+const HEDERA_TESTNET = {
+  chainId: "0x128",
+  chainName: "Hedera Testnet",
+  nativeCurrency: { name: "HBAR", symbol: "HBAR", decimals: 18 },
+  rpcUrls: ["https://testnet.hashio.io/api"],
+  blockExplorerUrls: ["https://hashscan.io/testnet"],
+};
+
 export default function Home() {
-  const [tab, setTab] = useState<Tab>("bounties");
-  const aboutRef = useRef<HTMLElement>(null);
-  const btnBounties = useRef<HTMLButtonElement>(null);
+  const [tab, setTab]               = useState<Tab>("bounties");
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [verified, setVerified]     = useState(false);
+  const [quests, setQuests]         = useState<Quest[]>([]);
+  const [claiming, setClaiming]     = useState<Record<string, boolean>>({});
+  const [toast, setToast]           = useState("");
+  const [toastVisible, setToastVisible] = useState(false);
+
+  const aboutRef      = useRef<HTMLElement>(null);
+  const btnBounties   = useRef<HTMLButtonElement>(null);
   const btnSideQuests = useRef<HTMLButtonElement>(null);
-  const pillRef = useRef<HTMLDivElement>(null);
+  const pillRef       = useRef<HTMLDivElement>(null);
   const [pillStyle, setPillStyle] = useState<CSSProperties>({});
+
+  const pendingQuestId = useRef<string | null>(null);
+  const toastTimer     = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const openWorldId    = useRef<(() => void) | null>(null);
+
+  const showToast = useCallback((msg: string, ms = 2800) => {
+    setToast(msg);
+    setToastVisible(true);
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToastVisible(false), ms);
+  }, []);
+
+  // Restore wallet if already connected
+  useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const eth = (window as any).ethereum;
+    if (!eth) return;
+    eth.request({ method: "eth_accounts" }).then((accounts: string[]) => {
+      if (accounts[0]) setWalletAddress(accounts[0]);
+    });
+  }, []);
+
+  const connectWallet = useCallback(async (): Promise<string | null> => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const eth = (window as any).ethereum;
+    if (!eth) { showToast("MetaMask not found — install it to receive HBAR"); return null; }
+    try {
+      const accounts: string[] = await eth.request({ method: "eth_requestAccounts" });
+      try {
+        await eth.request({ method: "wallet_switchEthereumChain", params: [{ chainId: HEDERA_TESTNET.chainId }] });
+      } catch (e: unknown) {
+        const err = e as { code?: number };
+        if (err.code === 4902 || err.code === -32603) {
+          await eth.request({ method: "wallet_addEthereumChain", params: [HEDERA_TESTNET] });
+        }
+      }
+      setWalletAddress(accounts[0]);
+      return accounts[0];
+    } catch (err) { console.error("wallet connect failed", err); return null; }
+  }, [showToast]);
+
+  const fetchQuests = useCallback(async () => {
+    try {
+      const r = await fetch(`${API}/api/quests`);
+      if (!r.ok) return;
+      setQuests(await r.json());
+    } catch { /* API unreachable — keep current state */ }
+  }, []);
+
+  useEffect(() => { fetchQuests(); }, [fetchQuests]);
+
+  // SSE for real-time bounty updates
+  useEffect(() => {
+    let es: EventSource;
+    const connect = () => {
+      es = new EventSource(`${API}/api/events`);
+      es.onmessage = () => fetchQuests();
+      es.onerror   = () => { es.close(); setTimeout(connect, 4000); };
+    };
+    connect();
+    return () => es?.close();
+  }, [fetchQuests]);
+
+  async function doClaim(id: string, addr: string) {
+    setClaiming(c => ({ ...c, [id]: true }));
+    try {
+      const r = await fetch(`${API}/api/bounties/${id}/claim`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ solver: addr }),
+      });
+      const d = await r.json();
+      if (!r.ok || d.error) throw new Error(d.error || String(r.status));
+      showToast("Bounty claimed! You'll be paid in HBAR when the robot is freed ✓");
+      fetchQuests();
+    } catch (e: unknown) {
+      showToast("Claim failed: " + (e as Error).message, 4000);
+    } finally {
+      setClaiming(c => ({ ...c, [id]: false }));
+    }
+  }
+
+  // Called after World ID verification succeeds
+  async function onWorldIdSuccess(proof: unknown) {
+    setVerified(true);
+    showToast("Human verified ✓ — connecting wallet…");
+    // Store nullifier in background (non-blocking)
+    fetch(`${WORKER}/verify-world-id`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(proof),
+    }).catch(() => {});
+    const addr = walletAddress ?? await connectWallet();
+    if (addr && pendingQuestId.current) {
+      await doClaim(pendingQuestId.current, addr);
+      pendingQuestId.current = null;
+    }
+  }
+
+  async function handleClaim(id: string) {
+    if (claiming[id]) return;
+    pendingQuestId.current = id;
+
+    // Step 1: World ID verification (if configured and not yet verified)
+    if (WORLD_APP_ID && !verified) {
+      openWorldId.current?.();
+      return;
+    }
+
+    // Step 2: Wallet
+    const addr = walletAddress ?? await connectWallet();
+    if (!addr) return;
+
+    // Step 3: Claim
+    await doClaim(id, addr);
+    pendingQuestId.current = null;
+  }
+
+  function timeAgo(iso: string) {
+    const sec = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+    if (sec < 60)   return `${sec}s ago`;
+    if (sec < 3600) return `${Math.floor(sec / 60)}m ago`;
+    return `${Math.floor(sec / 3600)}h ago`;
+  }
 
   useLayoutEffect(() => {
     const activeBtn = tab === "bounties" ? btnBounties.current : btnSideQuests.current;
@@ -392,10 +543,22 @@ export default function Home() {
     }
   }, [tab]);
 
-  const items = tab === "bounties" ? BOUNTIES : SIDE_QUESTS;
+  const staticItems = tab === "bounties" ? BOUNTIES : SIDE_QUESTS;
 
   return (
     <div style={s.page}>
+      {/* World ID widget — invisible, triggered programmatically by handleClaim */}
+      {WORLD_APP_ID && (
+        <IDKitWidget
+          app_id={WORLD_APP_ID as `app_${string}`}
+          action="claim-bounty"
+          verification_level={VerificationLevel.Device}
+          onSuccess={onWorldIdSuccess}
+        >
+          {({ open }) => { openWorldId.current = open; return null; }}
+        </IDKitWidget>
+      )}
+
       {/* Header */}
       <header style={s.header}>
         <button
@@ -405,14 +568,14 @@ export default function Home() {
           onMouseEnter={e => { e.currentTarget.style.background = TEXT; e.currentTarget.style.color = BG; e.currentTarget.style.borderColor = TEXT; }}
           onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = TEXT; e.currentTarget.style.borderColor = "rgba(170,204,187,0.25)"; }}
         >?</button>
-        {process.env.NEXT_PUBLIC_PRIVY_APP_ID && process.env.NEXT_PUBLIC_PRIVY_APP_ID !== "your-privy-app-id-here"
-          ? <UserPill action={{ type: "connectWallet" }} />
-          : <button
-              style={s.connectBtn}
-              onMouseEnter={e => { e.currentTarget.style.background = TEXT; e.currentTarget.style.color = BG; e.currentTarget.style.borderColor = TEXT; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = TEXT; e.currentTarget.style.borderColor = "rgba(170,204,187,0.25)"; }}
-            >CONNECT WALLET</button>
-        }
+        <button
+          style={s.connectBtn}
+          onClick={walletAddress ? undefined : connectWallet}
+          onMouseEnter={e => { e.currentTarget.style.background = TEXT; e.currentTarget.style.color = BG; e.currentTarget.style.borderColor = TEXT; }}
+          onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = TEXT; e.currentTarget.style.borderColor = "rgba(170,204,187,0.25)"; }}
+        >
+          {walletAddress ? `✓ ${walletAddress.slice(0, 6)}…${walletAddress.slice(-4)}` : "CONNECT WALLET"}
+        </button>
       </header>
 
       {/* Hero */}
@@ -450,27 +613,54 @@ export default function Home() {
 
       {/* Grid */}
       <div className="card-grid">
-        {items.map((item) => (
-          <div key={item.id} style={s.card}>
-            <div style={s.cardImg}>
-              <img
-                src={`/assets/robots/${item.id}.webp`}
-                alt={item.id}
-                style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-              />
-              <div style={s.cardTimestamp}>
-                <span style={s.cardTimestampText}>{item.time}</span>
+        {tab === "bounties" && quests.length > 0
+          ? quests.map(q => (
+              <div key={q.id} style={s.card}>
+                <div style={s.cardImg}>
+                  {q.imageUrl && (
+                    <img
+                      src={q.imageUrl}
+                      alt={q.name}
+                      style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                    />
+                  )}
+                  <div style={s.cardTimestamp}>
+                    <span style={s.cardTimestampText}>{timeAgo(q.postedAt)}</span>
+                  </div>
+                </div>
+                <div style={s.cardBody}>
+                  <div>
+                    <div style={s.cardLabel}>{q.name}</div>
+                    <div style={s.cardAmount}>💰 {q.bounty} HBAR</div>
+                  </div>
+                  <button style={s.startBtn} onClick={() => handleClaim(q.id)}>
+                    Start
+                  </button>
+                </div>
               </div>
-            </div>
-            <div style={s.cardBody}>
-              <div>
-                <div style={s.cardLabel}>{item.name}</div>
-                <div style={s.cardAmount}>💰{item.amount}</div>
+            ))
+          : staticItems.map((item) => (
+              <div key={item.id} style={s.card}>
+                <div style={s.cardImg}>
+                  <img
+                    src={`/assets/robots/${item.id}.webp`}
+                    alt={item.id}
+                    style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                  />
+                  <div style={s.cardTimestamp}>
+                    <span style={s.cardTimestampText}>{item.time}</span>
+                  </div>
+                </div>
+                <div style={s.cardBody}>
+                  <div>
+                    <div style={s.cardLabel}>{item.name}</div>
+                    <div style={s.cardAmount}>💰{item.amount}</div>
+                  </div>
+                  <button style={s.startBtn}>Start</button>
+                </div>
               </div>
-              <button style={s.startBtn}>Start</button>
-            </div>
-          </div>
-        ))}
+            ))
+        }
       </div>
 
       {/* About */}
@@ -479,7 +669,7 @@ export default function Home() {
         style={{
           maxWidth: 620,
           margin: "0 auto",
-          padding: "96px 24px 80px",
+          padding: "48px 24px 80px",
           fontFamily: "'DM Mono', monospace",
           fontSize: 14,
           lineHeight: 1.85,
@@ -566,6 +756,29 @@ export default function Home() {
         </div>
 
       </section>
+
+      {/* Toast notification */}
+      {toastVisible && (
+        <div style={{
+          position: "fixed",
+          bottom: 28,
+          left: "50%",
+          transform: "translateX(-50%)",
+          background: "#1c341c",
+          border: "1px solid rgba(170,204,187,0.2)",
+          color: TEXT,
+          padding: "12px 22px",
+          borderRadius: 999,
+          fontSize: 13,
+          fontFamily: "'DM Mono', monospace",
+          letterSpacing: "-0.03em",
+          zIndex: 100,
+          whiteSpace: "nowrap",
+          pointerEvents: "none",
+        }}>
+          {toast}
+        </div>
+      )}
     </div>
   );
 }

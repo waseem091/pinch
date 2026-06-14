@@ -4,7 +4,7 @@
   "description": "WebXR hand tracking relay for Snap Spectacles",
   "main": "server.js",
   "scripts": {
-    "dev": "npx live-server frontend --port=30499 --no-browser",
+    "dev": "npm run dev --prefix apps/web",
     "setup": "node monitor/setup-robot.js",
     "bounty": "node monitor/hedera-monitor.js",
     "build": "node scripts/build.js",

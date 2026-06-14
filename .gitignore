@@ -3,3 +3,7 @@ node_modules/
 .vercel/
 .vercel
 robot-wallets.json
+public/
+frontend/bounties-app/.env.local
+frontend/bounties-app/node_modules/
+frontend/bounties-app/dist/

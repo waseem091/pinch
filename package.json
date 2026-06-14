@@ -6,8 +6,10 @@
   "scripts": {
     "setup": "node monitor/setup-robot.js",
     "bounty": "node monitor/hedera-monitor.js",
+    "build": "node scripts/build.js",
     "deploy:worker": "cd worker && wrangler deploy",
-    "deploy:frontend": "vercel --prod"
+    "deploy:frontend": "vercel --prod",
+    "ens:setup": "node scripts/ens-robots.mjs"
   },
   "dependencies": {
     "@hashgraph/sdk": "^2.81.0",
@@ -16,6 +18,7 @@
     "ws": "^8.18.0"
   },
   "devDependencies": {
+    "viem": "^2.0.0",
     "wrangler": "^4.100.0"
   }
 }

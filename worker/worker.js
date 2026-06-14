@@ -1,13 +1,12 @@
 /**
  * Pinch relay on Cloudflare Workers.
  *
- * WebSocket relay (Durable Object) + payment record store.
- *
  * Endpoints:
- *   /ws                  – WebSocket relay
- *   /viewer              – live coordinate dashboard
- *   GET  /payments/:id   – get Hedera tx ID for a quest
- *   POST /payments/:id   – store Hedera tx ID (called by hedera-monitor.js)
+ *   /ws                    – WebSocket relay
+ *   /viewer                – live coordinate dashboard
+ *   GET  /payments/:id     – get Hedera tx ID for a quest
+ *   POST /payments/:id     – store Hedera tx ID
+ *   POST /verify-world-id  – verify World ID proof + store nullifier
  */
 
 import VIEWER_HTML from './viewer.html';
@@ -18,19 +17,72 @@ const CORS = {
   'Access-Control-Allow-Headers': 'Content-Type',
 };
 
-export class Relay {
-  constructor(state) { this.state = state; }
+const WORLD_VERIFY_URL = 'https://developer.worldcoin.org/api/v2/verify';
+const WORLD_ACTION     = 'claim-bounty';
 
-  // ── WebSocket relay ────────────────────────────────────────────────────────
+export class Relay {
+  constructor(state, env) {
+    this.state = state;
+    this.env   = env;
+  }
+
   async fetch(request) {
     const url = new URL(request.url);
 
-    // Payment storage endpoints — routed through the DO so storage is consistent
+    if (request.method === 'OPTIONS') {
+      return new Response(null, { status: 204, headers: CORS });
+    }
+
+    // ── World ID verification ──────────────────────────────────────────────────
+    if (url.pathname === '/verify-world-id' && request.method === 'POST') {
+      const { proof, nullifier_hash, merkle_root, verification_level } =
+        await request.json();
+
+      // If already verified, let them through (same human, same nullifier)
+      const existing = await this.state.storage.get(`nullifier:${nullifier_hash}`);
+      if (existing) {
+        return new Response(JSON.stringify({ ok: true, alreadyVerified: true }), {
+          headers: { 'Content-Type': 'application/json', ...CORS },
+        });
+      }
+
+      // Call World's verify API
+      const worldRes = await fetch(
+        `${WORLD_VERIFY_URL}/${this.env.WORLD_APP_ID}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            proof,
+            nullifier_hash,
+            merkle_root,
+            verification_level,
+            action: WORLD_ACTION,
+          }),
+        }
+      );
+
+      if (!worldRes.ok) {
+        const err = await worldRes.json().catch(() => ({}));
+        return new Response(
+          JSON.stringify({ error: err.detail || 'World ID verification failed' }),
+          { status: 400, headers: { 'Content-Type': 'application/json', ...CORS } }
+        );
+      }
+
+      // Store nullifier to prevent sybil re-use
+      await this.state.storage.put(`nullifier:${nullifier_hash}`, {
+        verifiedAt: new Date().toISOString(),
+      });
+
+      return new Response(JSON.stringify({ ok: true }), {
+        headers: { 'Content-Type': 'application/json', ...CORS },
+      });
+    }
+
+    // ── Payment storage ────────────────────────────────────────────────────────
     if (url.pathname.startsWith('/payments/')) {
       const questId = url.pathname.slice('/payments/'.length);
-      if (request.method === 'OPTIONS') {
-        return new Response(null, { status: 204, headers: CORS });
-      }
       if (request.method === 'GET') {
         const record = await this.state.storage.get(`payment:${questId}`);
         return new Response(JSON.stringify(record || null), {
@@ -47,7 +99,7 @@ export class Relay {
       return new Response('Method not allowed', { status: 405, headers: CORS });
     }
 
-    // WebSocket upgrade
+    // ── WebSocket upgrade ──────────────────────────────────────────────────────
     if (request.headers.get('Upgrade') !== 'websocket') {
       return new Response('expected websocket', { status: 426 });
     }
@@ -70,19 +122,18 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
-    // Route payment endpoints through the Durable Object (consistent storage)
-    if (url.pathname.startsWith('/payments/')) {
-      if (request.method === 'OPTIONS') {
-        return new Response(null, { status: 204, headers: CORS });
-      }
-      const id = env.RELAY.idFromName('global');
-      return env.RELAY.get(id).fetch(request);
+    if (request.method === 'OPTIONS') {
+      return new Response(null, { status: 204, headers: CORS });
     }
 
-    if (url.pathname === '/ws') {
+    const routeToDO = () => {
       const id = env.RELAY.idFromName('global');
       return env.RELAY.get(id).fetch(request);
-    }
+    };
+
+    if (url.pathname === '/verify-world-id') return routeToDO();
+    if (url.pathname.startsWith('/payments/'))  return routeToDO();
+    if (url.pathname === '/ws')                 return routeToDO();
 
     if (url.pathname === '/' || url.pathname === '/viewer') {
       return new Response(VIEWER_HTML, {

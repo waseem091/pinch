@@ -1,12 +1,12 @@
 {
   "version": 2,
   "name": "pinch",
-  "builds": [
-    { "src": "frontend/*.html", "use": "@vercel/static" }
-  ],
+  "buildCommand": "npm run build",
+  "outputDirectory": "public",
   "routes": [
-    { "src": "/bounties", "dest": "/frontend/bounties.html" },
-    { "src": "/(.*)",     "dest": "/frontend/index.html" }
+    { "handle": "filesystem" },
+    { "src": "/bounties(.*)", "dest": "/bounties/index.html" },
+    { "src": "/(.*)",         "dest": "/index.html" }
   ],
   "headers": [
     {

@@ -51,7 +51,12 @@
       "Bash(git pull *)",
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(npx identify *)",
+      "Bash(python -c \"from PIL import Image; img=Image.open\\('public/assets/name/n.png'\\); print\\(img.size\\)\")",
+      "Bash(powershell -Command 'Add-Type -AssemblyName System.Drawing; $img=[System.Drawing.Image]::FromFile\\('\\\\''public/assets/name/n.png'\\\\''\\); Write-Host $img.Width $img.Height')",
+      "Bash(python -c ' *)",
+      "Bash(powershell -Command ' *)"
     ],
     "additionalDirectories": [
       "c:\\Users\\muham\\projects\\pinch\\frontend\\assets\\robots"

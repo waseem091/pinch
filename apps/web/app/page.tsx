@@ -289,7 +289,7 @@ function PinchTitle() {
             // n: visible from the start, doesn't move (compressX = 0)
             return (
               <div key="n" style={slotStyle}>
-                <img src={letter.src} alt="n" style={{ display: "block" }} />
+                <img src={letter.src} alt="n" style={{ display: "block", width: "100%", height: "100%" }} />
               </div>
             );
           }
@@ -369,6 +369,8 @@ function PinchTitle() {
                 alt={letter.alt}
                 style={{
                   display: "block",
+                  width: "100%",
+                  height: "100%",
                   animation: `compress-${letter.alt} ${COMPRESS_DUR_S}s ease-in-out ${COMPRESS_START_S}s both`,
                 } as CSSProperties}
               />
@@ -570,7 +572,7 @@ export default function Home() {
         >?</button>
         <button
           style={s.connectBtn}
-          onClick={walletAddress ? undefined : connectWallet}
+          onClick={walletAddress ? undefined : (WORLD_APP_ID && !verified ? () => openWorldId.current?.() : connectWallet)}
           onMouseEnter={e => { e.currentTarget.style.background = TEXT; e.currentTarget.style.color = BG; e.currentTarget.style.borderColor = TEXT; }}
           onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = TEXT; e.currentTarget.style.borderColor = "rgba(170,204,187,0.25)"; }}
         >
@@ -613,33 +615,7 @@ export default function Home() {
 
       {/* Grid */}
       <div className="card-grid">
-        {tab === "bounties" && quests.length > 0
-          ? quests.map(q => (
-              <div key={q.id} style={s.card}>
-                <div style={s.cardImg}>
-                  {q.imageUrl && (
-                    <img
-                      src={q.imageUrl}
-                      alt={q.name}
-                      style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                    />
-                  )}
-                  <div style={s.cardTimestamp}>
-                    <span style={s.cardTimestampText}>{timeAgo(q.postedAt)}</span>
-                  </div>
-                </div>
-                <div style={s.cardBody}>
-                  <div>
-                    <div style={s.cardLabel}>{q.name}</div>
-                    <div style={s.cardAmount}>💰 {q.bounty} HBAR</div>
-                  </div>
-                  <button style={s.startBtn} onClick={() => handleClaim(q.id)}>
-                    Start
-                  </button>
-                </div>
-              </div>
-            ))
-          : staticItems.map((item) => (
+        {staticItems.map((item) => (
               <div key={item.id} style={s.card}>
                 <div style={s.cardImg}>
                   <img

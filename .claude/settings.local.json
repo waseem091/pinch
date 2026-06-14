@@ -61,7 +61,9 @@
       "Bash(python3 -c ' *)",
       "Bash(node -e \"const fs = require\\('fs'\\); const c = fs.readFileSync\\('C:/Users/muham/projects/pinch/apps/web/app/page.tsx','utf8'\\); console.log\\(c.length\\); console.log\\(c.substring\\(13500,13600\\)\\);\")",
       "Bash(node -e ' *)",
-      "Bash(node)"
+      "Bash(node)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\muham\\\\projects\\\\pinch\" -Recurse -Depth 2 -Directory)",
+      "Bash(Select-Object -First 30)"
     ],
     "additionalDirectories": [
       "c:\\Users\\muham\\projects\\pinch\\frontend\\assets\\robots"

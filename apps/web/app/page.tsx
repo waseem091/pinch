@@ -489,16 +489,25 @@ export default function Home() {
     }
   }
 
-  // Called after World ID verification succeeds
+  // Called after World ID verification succeeds — must confirm with backend first
   async function onWorldIdSuccess(proof: unknown) {
+    showToast("Verifying with World ID…");
+    try {
+      const res = await fetch(`${WORKER}/verify-world-id`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(proof),
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        throw new Error((d as { detail?: string }).detail || "Verification rejected");
+      }
+    } catch (e: unknown) {
+      showToast("World ID verification failed: " + (e as Error).message, 4000);
+      return;
+    }
     setVerified(true);
     showToast("Human verified ✓ — connecting wallet…");
-    // Store nullifier in background (non-blocking)
-    fetch(`${WORKER}/verify-world-id`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(proof),
-    }).catch(() => {});
     const addr = walletAddress ?? await connectWallet();
     if (addr && pendingQuestId.current) {
       await doClaim(pendingQuestId.current, addr);
@@ -510,8 +519,8 @@ export default function Home() {
     if (claiming[id]) return;
     pendingQuestId.current = id;
 
-    // Step 1: World ID verification (if configured and not yet verified)
-    if (WORLD_APP_ID && !verified) {
+    // Step 1: World ID verification (always required)
+    if (!verified) {
       openWorldId.current?.();
       return;
     }
@@ -590,7 +599,7 @@ export default function Home() {
         >?</button>
         <button
           style={s.connectBtn}
-          onClick={walletAddress ? undefined : (WORLD_APP_ID && !verified ? () => openWorldId.current?.() : connectWallet)}
+          onClick={walletAddress ? undefined : (!verified ? () => openWorldId.current?.() : connectWallet)}
           onMouseEnter={e => { e.currentTarget.style.background = TEXT; e.currentTarget.style.color = BG; e.currentTarget.style.borderColor = TEXT; }}
           onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = TEXT; e.currentTarget.style.borderColor = "rgba(170,204,187,0.25)"; }}
         >

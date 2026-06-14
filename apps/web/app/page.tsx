@@ -7,27 +7,28 @@ type Tab = "bounties" | "sidequests";
 
 interface Item {
   id: string;
+  name: string;
   amount: string;
   label: string;
   time: string;
 }
 
 const BOUNTIES: Item[] = [
-  { id: "robo1", amount: "0.01 ETH", label: "Patrol Zone A",    time: "51m ago" },
-  { id: "robo2", amount: "0.02 ETH", label: "Deliver Package",  time: "2h ago"  },
-  { id: "robo3", amount: "0.03 ETH", label: "Map Corridor 3",   time: "4h ago"  },
-  { id: "robo4", amount: "0.04 ETH", label: "Scan & Report",    time: "6h ago"  },
-  { id: "robo5", amount: "0.05 ETH", label: "Secure Perimeter", time: "9h ago"  },
-  { id: "robo6", amount: "0.06 ETH", label: "Retrieve Object",  time: "12h ago" },
+  { id: "robo1", name: "Sonny",      amount: "0.01 ETH", label: "Patrol Zone A",    time: "51m ago" },
+  { id: "robo2", name: "Stackchan",  amount: "0.02 ETH", label: "Deliver Package",  time: "2h ago"  },
+  { id: "robo3", name: "R2-D2",      amount: "0.03 ETH", label: "Map Corridor 3",   time: "4h ago"  },
+  { id: "robo4", name: "Wall-E",     amount: "0.04 ETH", label: "Scan & Report",    time: "6h ago"  },
+  { id: "robo5", name: "Chitti",     amount: "0.05 ETH", label: "Secure Perimeter", time: "9h ago"  },
+  { id: "robo6", name: "C-3PO",      amount: "0.06 ETH", label: "Retrieve Object",  time: "12h ago" },
 ];
 
 const SIDE_QUESTS: Item[] = [
-  { id: "robo1", amount: "0.01 ETH", label: "Wave at humans",  time: "22m ago" },
-  { id: "robo2", amount: "0.02 ETH", label: "Do a lil spin",   time: "1h ago"  },
-  { id: "robo3", amount: "0.03 ETH", label: "Find the cat",    time: "3h ago"  },
-  { id: "robo4", amount: "0.04 ETH", label: "Vibe check",      time: "5h ago"  },
-  { id: "robo5", amount: "0.05 ETH", label: "Touch grass",     time: "8h ago"  },
-  { id: "robo6", amount: "0.06 ETH", label: "Befriend pigeon", time: "11h ago" },
+  { id: "robo1", name: "Sonny",      amount: "0.01 ETH", label: "Wave at humans",  time: "22m ago" },
+  { id: "robo2", name: "Stackchan",  amount: "0.02 ETH", label: "Do a lil spin",   time: "1h ago"  },
+  { id: "robo3", name: "R2-D2",      amount: "0.03 ETH", label: "Find the cat",    time: "3h ago"  },
+  { id: "robo4", name: "Wall-E",     amount: "0.04 ETH", label: "Vibe check",      time: "5h ago"  },
+  { id: "robo5", name: "Chitti",     amount: "0.05 ETH", label: "Touch grass",     time: "8h ago"  },
+  { id: "robo6", name: "C-3PO",      amount: "0.06 ETH", label: "Befriend pigeon", time: "11h ago" },
 ];
 
 const BG = "#112211";
@@ -145,7 +146,7 @@ const s: Record<string, CSSProperties> = {
     whiteSpace: "nowrap",
   },
   card: {
-    background: "white",
+    background: "#aaccbb",
     borderRadius: 15,
     overflow: "hidden",
     width: 300,
@@ -166,6 +167,7 @@ const s: Record<string, CSSProperties> = {
     position: "relative",
     flexShrink: 0,
     overflow: "hidden",
+    boxShadow: "inset 0 0 0 2px #aaccbb",
   },
   cardTimestamp: {
     position: "absolute",
@@ -256,7 +258,7 @@ const FLIP_START_S     = COMPRESS_START_S;
 function PinchTitle() {
   return (
     <div style={{ display: "flex", justifyContent: "center", width: "100%" }}>
-      <div style={{ position: "relative", width: FIGMA_W, height: FIGMA_H, transform: "scale(0.48)", transformOrigin: "center", marginTop: -FIGMA_H * 0.26, marginBottom: -FIGMA_H * 0.26, marginLeft: -(FIGMA_W * 0.26), marginRight: -(FIGMA_W * 0.26) }}>
+      <div className="pinch-scale" style={{ position: "relative", width: FIGMA_W, height: FIGMA_H, transformOrigin: "center" }}>
         {LETTERS.map((letter) => {
           const isN   = letter.dist === 0;
           const isC   = letter.alt === "c";
@@ -417,7 +419,7 @@ export default function Home() {
       <div style={s.hero}>
         <PinchTitle />
         <p style={{ marginTop: 32, fontSize: 16, fontFamily: "'DM Mono', monospace", letterSpacing: "-0.03em", color: TEXT }}>
-          Help a robot.<br />Get paid on the spot.
+          Robots are in a pinch.<br />Humans, you're up.
         </p>
       </div>
 
@@ -451,13 +453,18 @@ export default function Home() {
         {items.map((item) => (
           <div key={item.id} style={s.card}>
             <div style={s.cardImg}>
+              <img
+                src={`/assets/robots/${item.id}.webp`}
+                alt={item.id}
+                style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+              />
               <div style={s.cardTimestamp}>
                 <span style={s.cardTimestampText}>{item.time}</span>
               </div>
             </div>
             <div style={s.cardBody}>
               <div>
-                <div style={s.cardLabel}>{item.id}</div>
+                <div style={s.cardLabel}>{item.name}</div>
                 <div style={s.cardAmount}>💰{item.amount}</div>
               </div>
               <button style={s.startBtn}>Start</button>

@@ -417,7 +417,7 @@ export default function Home() {
       <div style={s.hero}>
         <PinchTitle />
         <p style={{ marginTop: 32, fontSize: 16, fontFamily: "'DM Mono', monospace", letterSpacing: "-0.03em", color: TEXT }}>
-          Help a robot.<br />Get paid on the spot.
+          Robots are in a pinch.<br />Humans, you're up.
         </p>
       </div>
 

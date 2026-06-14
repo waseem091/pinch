@@ -124,10 +124,19 @@ header {
   height: 150px;
   transform: scale(0.48);
   transform-origin: center;
-  margin-top: -39px;   /* -150*0.26 */
+  margin-top: -39px;
   margin-bottom: -39px;
-  margin-left: -151.8px; /* -(584*0.26) */
+  margin-left: -151.8px;
   margin-right: -151.8px;
+}
+@media (min-width: 768px) {
+  .title-inner {
+    transform: scale(0.75);
+    margin-top: -18.75px;
+    margin-bottom: -18.75px;
+    margin-left: -73px;
+    margin-right: -73px;
+  }
 }
 
 /* letter slots */
@@ -150,10 +159,10 @@ header {
   animation: emerge-h 0.45s cubic-bezier(0.22,1,0.36,1) 0.2s both;
 }
 
-#slot-p img { display: block; animation: compress-p 0.4s ease-in-out 1.25s both; }
-#slot-i img { display: block; animation: compress-i 0.4s ease-in-out 1.25s both; }
-#slot-n img { display: block; }
-#slot-h img { display: block; animation: compress-h 0.4s ease-in-out 1.25s both; }
+#slot-p img { display: block; width: 100%; height: 100%; animation: compress-p 0.4s ease-in-out 1.25s both; }
+#slot-i img { display: block; width: 100%; height: 100%; animation: compress-i 0.4s ease-in-out 1.25s both; }
+#slot-n img { display: block; width: 100%; height: 100%; }
+#slot-h img { display: block; width: 100%; height: 100%; animation: compress-h 0.4s ease-in-out 1.25s both; }
 
 /* c: compress wrapper + coin-flip */
 #slot-c-compress {
@@ -216,27 +225,24 @@ header {
   font-family: 'DM Mono', monospace;
   letter-spacing: -0.03em;
   color: var(--text);
-  outline: 1.5px dotted transparent;
-  outline-offset: -3px;
-  transition: color 0.25s, outline-color 0.2s;
+  transition: color 0.25s;
   white-space: nowrap;
 }
 .tab-btn.active { color: var(--bg); }
-.tab-btn:not(.active):hover { outline-color: rgba(170,204,187,0.45); }
 
 /* ── Card grid ── */
 .card-grid {
   display: grid;
   grid-template-columns: repeat(3, 300px);
   gap: 15px;
-  padding: 0 24px 80px;
+  padding: 0 24px 40px;
   justify-content: center;
 }
 @media (max-width: 1039px) { .card-grid { grid-template-columns: repeat(2, 300px); } }
 @media (max-width: 679px)  { .card-grid { grid-template-columns: 300px; } }
 
 .card {
-  background: white;
+  background: #aaccbb;
   border-radius: 15px;
   overflow: hidden;
   width: 300px;
@@ -256,6 +262,14 @@ header {
   position: relative;
   flex-shrink: 0;
   overflow: hidden;
+}
+.card-img::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 0 0 2px #aaccbb;
+  border-radius: 15px 15px 0 0;
+  pointer-events: none;
 }
 .card-timestamp {
   position: absolute;
@@ -282,7 +296,7 @@ header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: white;
+  background: #aaccbb;
   flex-shrink: 0;
 }
 .card-label {
@@ -327,7 +341,7 @@ header {
 .about {
   max-width: 620px;
   margin: 0 auto;
-  padding: 96px 24px 80px;
+  padding: 48px 24px 80px;
   font-family: 'DM Mono', monospace;
   font-size: 14px;
   line-height: 1.85;
@@ -335,7 +349,7 @@ header {
 }
 .about p { margin-bottom: 1.5em; }
 .about p:last-of-type { margin-bottom: 2.5em; }
-.about a { color: var(--accent); text-decoration: underline; cursor: pointer; }
+.about a { color: var(--accent); text-decoration: none; cursor: pointer; }
 
 .about-links { display: flex; gap: 12px; margin-bottom: 2.5em; flex-wrap: wrap; }
 .about-link {
@@ -396,7 +410,7 @@ header {
       </div>
     </div>
   </div>
-  <p class="hero-sub">Help a robot.<br>Get paid on the spot.</p>
+  <p class="hero-sub">Robots are in a pinch.<br>Humans, you're up.</p>
 </div>
 
 <!-- Tab toggle -->
@@ -446,20 +460,20 @@ header {
 
 <script>
 const BOUNTIES = [
-  { id: "robo1", amount: "0.01 ETH", label: "Patrol Zone A",    time: "51m ago" },
-  { id: "robo2", amount: "0.02 ETH", label: "Deliver Package",  time: "2h ago"  },
-  { id: "robo3", amount: "0.03 ETH", label: "Map Corridor 3",   time: "4h ago"  },
-  { id: "robo4", amount: "0.04 ETH", label: "Scan & Report",    time: "6h ago"  },
-  { id: "robo5", amount: "0.05 ETH", label: "Secure Perimeter", time: "9h ago"  },
-  { id: "robo6", amount: "0.06 ETH", label: "Retrieve Object",  time: "12h ago" },
+  { id: "robo1", name: "Sonny",     amount: "0.01 ETH", label: "Patrol Zone A",    time: "51m ago" },
+  { id: "robo2", name: "Stackchan", amount: "0.02 ETH", label: "Deliver Package",  time: "2h ago"  },
+  { id: "robo3", name: "R2-D2",     amount: "0.03 ETH", label: "Map Corridor 3",   time: "4h ago"  },
+  { id: "robo4", name: "Wall-E",    amount: "0.04 ETH", label: "Scan & Report",    time: "6h ago"  },
+  { id: "robo5", name: "Chitti",    amount: "0.05 ETH", label: "Secure Perimeter", time: "9h ago"  },
+  { id: "robo6", name: "C-3PO",     amount: "0.06 ETH", label: "Retrieve Object",  time: "12h ago" },
 ];
 const SIDE_QUESTS = [
-  { id: "robo1", amount: "0.01 ETH", label: "Wave at humans",  time: "22m ago" },
-  { id: "robo2", amount: "0.02 ETH", label: "Do a lil spin",   time: "1h ago"  },
-  { id: "robo3", amount: "0.03 ETH", label: "Find the cat",    time: "3h ago"  },
-  { id: "robo4", amount: "0.04 ETH", label: "Vibe check",      time: "5h ago"  },
-  { id: "robo5", amount: "0.05 ETH", label: "Touch grass",     time: "8h ago"  },
-  { id: "robo6", amount: "0.06 ETH", label: "Befriend pigeon", time: "11h ago" },
+  { id: "robo1", name: "Sonny",     amount: "0.01 ETH", label: "Wave at humans",  time: "22m ago" },
+  { id: "robo2", name: "Stackchan", amount: "0.02 ETH", label: "Do a lil spin",   time: "1h ago"  },
+  { id: "robo3", name: "R2-D2",     amount: "0.03 ETH", label: "Find the cat",    time: "3h ago"  },
+  { id: "robo4", name: "Wall-E",    amount: "0.04 ETH", label: "Vibe check",      time: "5h ago"  },
+  { id: "robo5", name: "Chitti",    amount: "0.05 ETH", label: "Touch grass",     time: "8h ago"  },
+  { id: "robo6", name: "C-3PO",     amount: "0.06 ETH", label: "Befriend pigeon", time: "11h ago" },
 ];
 
 let currentTab = 'bounties';
@@ -469,11 +483,12 @@ function renderCards(items) {
   grid.innerHTML = items.map(item => `
     <div class="card">
       <div class="card-img">
+        <img src="assets/robots/${item.id}.webp" alt="${item.id}" style="width:100%;height:100%;object-fit:cover;display:block;">
         <div class="card-timestamp"><span>${item.time}</span></div>
       </div>
       <div class="card-body">
         <div>
-          <div class="card-label">${item.id}</div>
+          <div class="card-label">${item.name}</div>
           <div class="card-amount">💰${item.amount}</div>
         </div>
         <a class="start-btn" href="/xr.html">Start</a>

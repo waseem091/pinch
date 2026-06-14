@@ -18,6 +18,7 @@ fs.copyFileSync(
   path.join(ROOT, 'frontend/index.html'),
   path.join(PUBLIC, 'index.html')
 );
+copyDir(path.join(ROOT, 'frontend/assets'), path.join(PUBLIC, 'assets'));
 copyDir(path.join(BOUNTIES_APP, 'dist'), path.join(PUBLIC, 'bounties'));
 console.log('[build] Done → public/');
 

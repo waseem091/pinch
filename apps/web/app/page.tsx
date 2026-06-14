@@ -24,24 +24,25 @@ interface Item {
   amount: string;
   label: string;
   time: string;
+  img?: string;
 }
 
 const BOUNTIES: Item[] = [
-  { id: "robo1", name: "Sonny",      amount: "0.01 ETH", label: "Patrol Zone A",    time: "51m ago" },
-  { id: "robo2", name: "Stackchan",  amount: "0.02 ETH", label: "Deliver Package",  time: "2h ago"  },
+  { id: "robo2", name: "Stackchan",  amount: "0.01 ETH", label: "Deliver Package",  time: "2h ago"  },
+  { id: "robo6", name: "C-3PO",      amount: "0.02 ETH", label: "Retrieve Object",  time: "12h ago" },
   { id: "robo3", name: "R2-D2",      amount: "0.03 ETH", label: "Map Corridor 3",   time: "4h ago"  },
-  { id: "robo4", name: "Wall-E",     amount: "0.04 ETH", label: "Scan & Report",    time: "6h ago"  },
-  { id: "robo5", name: "Chitti",     amount: "0.05 ETH", label: "Secure Perimeter", time: "9h ago"  },
-  { id: "robo6", name: "C-3PO",      amount: "0.06 ETH", label: "Retrieve Object",  time: "12h ago" },
+  { id: "robo1", name: "Sonny",      amount: "0.04 ETH", label: "Patrol Zone A",    time: "51m ago" },
+  { id: "robo4", name: "Wall-E",     amount: "0.05 ETH", label: "Scan & Report",    time: "6h ago"  },
+  { id: "robo5", name: "Chitti",     amount: "0.06 ETH", label: "Secure Perimeter", time: "9h ago"  },
 ];
 
 const SIDE_QUESTS: Item[] = [
-  { id: "robo1", name: "Sonny",      amount: "0.01 ETH", label: "Wave at humans",  time: "22m ago" },
-  { id: "robo2", name: "Stackchan",  amount: "0.02 ETH", label: "Do a lil spin",   time: "1h ago"  },
-  { id: "robo3", name: "R2-D2",      amount: "0.03 ETH", label: "Find the cat",    time: "3h ago"  },
-  { id: "robo4", name: "Wall-E",     amount: "0.04 ETH", label: "Vibe check",      time: "5h ago"  },
-  { id: "robo5", name: "Chitti",     amount: "0.05 ETH", label: "Touch grass",     time: "8h ago"  },
-  { id: "robo6", name: "C-3PO",      amount: "0.06 ETH", label: "Befriend pigeon", time: "11h ago" },
+  { id: "robo1", name: "Sonny",      amount: "0.01 ETH", label: "Greet a Stranger",      time: "22m ago", img: "/assets/side-quests/greet-stranger.webp"    },
+  { id: "robo2", name: "Stackchan",  amount: "0.02 ETH", label: "Spin Dance Routine",    time: "1h ago",  img: "/assets/side-quests/spin-dance.webp"         },
+  { id: "robo3", name: "R2-D2",      amount: "0.03 ETH", label: "Track the Missing Cat", time: "3h ago",  img: "/assets/side-quests/track-missing-cat.webp"  },
+  { id: "robo4", name: "Wall-E",     amount: "0.04 ETH", label: "Social Calibration",    time: "5h ago",  img: "/assets/side-quests/social-calibration.webp" },
+  { id: "robo5", name: "Chitti",     amount: "0.05 ETH", label: "Explore the Outdoors",  time: "8h ago",  img: "/assets/side-quests/explore-outdoors.webp"   },
+  { id: "robo6", name: "C-3PO",      amount: "0.06 ETH", label: "Wildlife Diplomacy",    time: "11h ago", img: "/assets/side-quests/wildlife-diplomacy.webp" },
 ];
 
 const BG = "#112211";
@@ -398,6 +399,8 @@ export default function Home() {
   const [claiming, setClaiming]     = useState<Record<string, boolean>>({});
   const [toast, setToast]           = useState("");
   const [toastVisible, setToastVisible] = useState(false);
+  const [fadingCard, setFadingCard] = useState<string | null>(null);
+  const [hoveredCard, setHoveredCard] = useState<string | null>(null);
 
   const aboutRef      = useRef<HTMLElement>(null);
   const btnBounties   = useRef<HTMLButtonElement>(null);
@@ -522,6 +525,11 @@ export default function Home() {
     pendingQuestId.current = null;
   }
 
+  function handleStartClick(itemId: string) {
+    setFadingCard(itemId);
+    setHoveredCard(null);
+  }
+
   function timeAgo(iso: string) {
     const sec = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
     if (sec < 60)   return `${sec}s ago`;
@@ -549,6 +557,7 @@ export default function Home() {
 
   return (
     <div style={s.page}>
+
       {/* World ID widget — invisible, triggered programmatically by handleClaim */}
       {WORLD_APP_ID && (
         <IDKitWidget
@@ -615,28 +624,61 @@ export default function Home() {
 
       {/* Grid */}
       <div className="card-grid">
-        {staticItems.map((item) => (
-              <div key={item.id} style={s.card}>
-                <div style={s.cardImg}>
-                  <img
-                    src={`/assets/robots/${item.id}.webp`}
-                    alt={item.id}
-                    style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                  />
-                  <div style={s.cardTimestamp}>
-                    <span style={s.cardTimestampText}>{item.time}</span>
-                  </div>
-                </div>
-                <div style={s.cardBody}>
-                  <div>
-                    <div style={s.cardLabel}>{item.name}</div>
-                    <div style={s.cardAmount}>💰{item.amount}</div>
-                  </div>
-                  <button style={s.startBtn}>Start</button>
+        {staticItems.map((item) => {
+          const fading  = fadingCard === item.id;
+          const hovered = hoveredCard === item.id;
+          const cardBg  = hovered ? 'white' : '#aaccbb';
+          const textCol = hovered ? ACCENT : 'black';
+          return (
+            <div key={item.id} style={{ ...s.card, background: cardBg, position: 'relative' }}>
+              <div style={{ ...s.cardImg, opacity: fading ? 0 : 1, transition: 'opacity 0.35s ease' }}>
+                <img
+                  src={item.img ?? `/assets/robots/${item.id}.webp`}
+                  alt={item.id}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                />
+                <div style={s.cardTimestamp}>
+                  <span style={s.cardTimestampText}>{item.time}</span>
                 </div>
               </div>
-            ))
-        }
+              <div style={{ ...s.cardBody, background: cardBg, opacity: fading ? 0 : 1, transition: 'background 0.15s ease, opacity 0.35s ease' }}>
+                <div>
+                  <div style={{ ...s.cardLabel, color: textCol }}>{tab === 'sidequests' ? item.label : item.name}</div>
+                  <div style={{ ...s.cardAmount, color: textCol }}>💰{item.amount}</div>
+                </div>
+                <button
+                  style={{
+                    ...s.startBtn,
+                    background: hovered ? 'white' : '#66a66d',
+                    color: hovered ? ACCENT : 'white',
+                    border: hovered ? `2px solid ${ACCENT}` : '2px solid transparent',
+                  }}
+                  onClick={() => handleStartClick(item.id)}
+                  onMouseEnter={() => setHoveredCard(item.id)}
+                  onMouseLeave={() => setHoveredCard(null)}
+                >
+                  Start
+                </button>
+              </div>
+              {fading && (
+                <div style={{
+                  position: 'absolute', inset: 0,
+                  display: 'flex', flexDirection: 'column',
+                  alignItems: 'center', justifyContent: 'center',
+                  padding: '0 24px', textAlign: 'center',
+                  background: '#aaccbb',
+                }}>
+                  <p style={{ margin: 0, fontSize: 16, fontFamily: "'DM Sans', sans-serif", fontWeight: 500, color: 'black', lineHeight: 1.4, letterSpacing: '-0.03em' }}>
+                    Grab your AR Glasses and enter<br />the URL below on your browser.
+                  </p>
+                  <p style={{ margin: '10px 0 0', fontSize: 14, fontFamily: "'DM Mono', monospace", fontWeight: 500, color: 'black', letterSpacing: '-0.03em' }}>
+                    xrpinch.vercel.app/bounty
+                  </p>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {/* About */}

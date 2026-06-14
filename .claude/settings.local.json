@@ -56,7 +56,12 @@
       "Bash(python -c \"from PIL import Image; img=Image.open\\('public/assets/name/n.png'\\); print\\(img.size\\)\")",
       "Bash(powershell -Command 'Add-Type -AssemblyName System.Drawing; $img=[System.Drawing.Image]::FromFile\\('\\\\''public/assets/name/n.png'\\\\''\\); Write-Host $img.Width $img.Height')",
       "Bash(python -c ' *)",
-      "Bash(powershell -Command ' *)"
+      "Bash(powershell -Command ' *)",
+      "Bash(findstr /n \"overlayActive\\\\|fadingCard\\\\|hoveredCard\\\\|handleStartClick\\\\|full-page\\\\|fixed.*inset\\\\|position.*fixed.*inset\")",
+      "Bash(python3 -c ' *)",
+      "Bash(node -e \"const fs = require\\('fs'\\); const c = fs.readFileSync\\('C:/Users/muham/projects/pinch/apps/web/app/page.tsx','utf8'\\); console.log\\(c.length\\); console.log\\(c.substring\\(13500,13600\\)\\);\")",
+      "Bash(node -e ' *)",
+      "Bash(node)"
     ],
     "additionalDirectories": [
       "c:\\Users\\muham\\projects\\pinch\\frontend\\assets\\robots"

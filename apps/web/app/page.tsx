@@ -399,7 +399,7 @@ export default function Home() {
   const [claiming, setClaiming]     = useState<Record<string, boolean>>({});
   const [toast, setToast]           = useState("");
   const [toastVisible, setToastVisible] = useState(false);
-  const [fadingCard, setFadingCard] = useState<string | null>(null);
+  const [cardStates, setCardStates] = useState<Record<string, 'ar' | 'claimable' | 'claimed'>>({});
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
 
   const aboutRef      = useRef<HTMLElement>(null);
@@ -526,7 +526,16 @@ export default function Home() {
   }
 
   function handleStartClick(itemId: string) {
-    setFadingCard(itemId);
+    setCardStates(s => ({ ...s, [itemId]: 'ar' }));
+    setHoveredCard(null);
+  }
+
+  function handleBackFromAR(itemId: string) {
+    setCardStates(s => ({ ...s, [itemId]: 'claimable' }));
+  }
+
+  function handleClaimClick(itemId: string) {
+    setCardStates(s => ({ ...s, [itemId]: 'claimed' }));
     setHoveredCard(null);
   }
 
@@ -625,13 +634,59 @@ export default function Home() {
       {/* Grid */}
       <div className="card-grid">
         {staticItems.map((item) => {
-          const fading  = fadingCard === item.id;
+          const state   = cardStates[item.id];
           const hovered = hoveredCard === item.id;
           const cardBg  = hovered ? 'white' : '#aaccbb';
           const textCol = hovered ? ACCENT : 'black';
+          if (state === 'ar') {
+            return (
+              <div key={item.id} style={{ ...s.card, position: 'relative', background: '#aaccbb' }}>
+                <div style={{
+                  position: 'absolute', inset: 0,
+                  display: 'flex', flexDirection: 'column',
+                  alignItems: 'center', justifyContent: 'center',
+                  padding: '0 24px', textAlign: 'center',
+                }}>
+                  <p style={{ margin: 0, fontSize: 16, fontFamily: "'DM Sans', sans-serif", fontWeight: 500, color: 'black', lineHeight: 1.4, letterSpacing: '-0.03em' }}>
+                    Grab your AR Glasses and enter<br />the URL below on your browser.
+                  </p>
+                  <p style={{ margin: '10px 0 0', fontSize: 14, fontFamily: "'DM Mono', monospace", fontWeight: 500, color: 'black', letterSpacing: '-0.03em' }}>
+                    xrpinch.vercel.app/bounty
+                  </p>
+                  <button
+                    onClick={() => handleBackFromAR(item.id)}
+                    style={{ marginTop: 14, background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, fontFamily: "'DM Mono', monospace", color: 'rgba(0,0,0,0.4)', letterSpacing: '-0.03em' }}
+                  >
+                    ← back
+                  </button>
+                </div>
+              </div>
+            );
+          }
+          if (state === 'claimed') {
+            return (
+              <div key={item.id} style={{ ...s.card, position: 'relative', background: '#aaccbb' }}>
+                <div style={{
+                  position: 'absolute', inset: 0,
+                  display: 'flex', flexDirection: 'column',
+                  alignItems: 'center', justifyContent: 'center',
+                  padding: '0 24px', textAlign: 'center',
+                }}>
+                  <p style={{ margin: 0, fontSize: 16, fontFamily: "'DM Sans', sans-serif", fontWeight: 500, color: 'black', lineHeight: 1.4, letterSpacing: '-0.03em' }}>
+                    Congrats! Reward Claimed
+                  </p>
+                  <p style={{ margin: '10px 0 0', fontSize: 14, fontFamily: "'DM Mono', monospace", fontWeight: 500, color: 'black', letterSpacing: '-0.03em' }}>
+                    View Hash Transaction{' '}
+                    <a href='#' style={{ color: 'black', textDecoration: 'underline' }}>Here</a>.
+                  </p>
+                </div>
+              </div>
+            );
+          }
+          const isClaimable = state === 'claimable';
           return (
             <div key={item.id} style={{ ...s.card, background: cardBg, position: 'relative' }}>
-              <div style={{ ...s.cardImg, opacity: fading ? 0 : 1, transition: 'opacity 0.35s ease' }}>
+              <div style={{ ...s.cardImg }}>
                 <img
                   src={item.img ?? `/assets/robots/${item.id}.webp`}
                   alt={item.id}
@@ -641,7 +696,7 @@ export default function Home() {
                   <span style={s.cardTimestampText}>{item.time}</span>
                 </div>
               </div>
-              <div style={{ ...s.cardBody, background: cardBg, opacity: fading ? 0 : 1, transition: 'background 0.15s ease, opacity 0.35s ease' }}>
+              <div style={{ ...s.cardBody, background: cardBg, transition: 'background 0.15s ease' }}>
                 <div>
                   <div style={{ ...s.cardLabel, color: textCol }}>{tab === 'sidequests' ? item.label : item.name}</div>
                   <div style={{ ...s.cardAmount, color: textCol }}>💰{item.amount}</div>
@@ -653,29 +708,13 @@ export default function Home() {
                     color: hovered ? ACCENT : 'white',
                     border: hovered ? `2px solid ${ACCENT}` : '2px solid transparent',
                   }}
-                  onClick={() => handleStartClick(item.id)}
+                  onClick={() => isClaimable ? handleClaimClick(item.id) : handleStartClick(item.id)}
                   onMouseEnter={() => setHoveredCard(item.id)}
                   onMouseLeave={() => setHoveredCard(null)}
                 >
-                  Start
+                  {isClaimable ? 'Claim' : 'Start'}
                 </button>
               </div>
-              {fading && (
-                <div style={{
-                  position: 'absolute', inset: 0,
-                  display: 'flex', flexDirection: 'column',
-                  alignItems: 'center', justifyContent: 'center',
-                  padding: '0 24px', textAlign: 'center',
-                  background: '#aaccbb',
-                }}>
-                  <p style={{ margin: 0, fontSize: 16, fontFamily: "'DM Sans', sans-serif", fontWeight: 500, color: 'black', lineHeight: 1.4, letterSpacing: '-0.03em' }}>
-                    Grab your AR Glasses and enter<br />the URL below on your browser.
-                  </p>
-                  <p style={{ margin: '10px 0 0', fontSize: 14, fontFamily: "'DM Mono', monospace", fontWeight: 500, color: 'black', letterSpacing: '-0.03em' }}>
-                    xrpinch.vercel.app/bounty
-                  </p>
-                </div>
-              )}
             </div>
           );
         })}

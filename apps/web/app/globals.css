@@ -59,7 +59,7 @@ html, body {
 .card-grid {
   display: grid;
   grid-template-columns: repeat(3, 300px);
-  gap: 25px;
+  gap: 15px;
   padding: 0 24px 80px;
   justify-content: center;
 }

@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useRef, useLayoutEffect, useEffect, CSSProperties } from "react";
+import { useState, useRef, useLayoutEffect, CSSProperties } from "react";
 import { UserPill } from "@privy-io/react-auth/ui";
-import { GlassesViewer } from "./GlassesViewer";
 
 type Tab = "bounties" | "sidequests";
 
@@ -70,7 +69,7 @@ const s: Record<string, CSSProperties> = {
     alignItems: "center",
     justifyContent: "center",
     letterSpacing: "-0.03em",
-    transition: "border-color .2s, color .2s",
+    transition: "background .15s, color .15s, border-color .15s",
   },
   connectBtn: {
     height: 42,
@@ -84,7 +83,7 @@ const s: Record<string, CSSProperties> = {
     fontWeight: 500,
     cursor: "pointer",
     letterSpacing: "-0.03em",
-    transition: "border-color .2s, color .2s",
+    transition: "background .15s, color .15s, border-color .15s",
   },
   hero: {
     paddingTop: 110,
@@ -140,7 +139,9 @@ const s: Record<string, CSSProperties> = {
     fontWeight: 500,
     fontFamily: "'DM Mono', monospace",
     letterSpacing: "-0.03em",
-    transition: "color 0.25s",
+    outline: "1.5px dotted transparent",
+    outlineOffset: "-3px",
+    transition: "color 0.25s, outline-color 0.2s",
     whiteSpace: "nowrap",
   },
   card: {
@@ -226,95 +227,6 @@ const s: Record<string, CSSProperties> = {
     cursor: "pointer",
     letterSpacing: "-0.03em",
     flexShrink: 0,
-  },
-  overlay: {
-    position: "fixed",
-    inset: 0,
-    zIndex: 50,
-    background: "rgba(10,20,10,0.7)",
-    backdropFilter: "blur(8px)",
-    WebkitBackdropFilter: "blur(8px)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 24,
-  },
-  modal: {
-    background: "#172e17",
-    border: "1px solid rgba(170,204,187,0.1)",
-    borderRadius: 24,
-    width: "100%",
-    maxWidth: 420,
-    overflow: "hidden",
-    position: "relative",
-  },
-  modalClose: {
-    position: "absolute",
-    top: 14, right: 14,
-    width: 32, height: 32,
-    borderRadius: "50%",
-    border: "none",
-    background: "rgba(170,204,187,0.07)",
-    color: TEXT,
-    fontSize: 16,
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 1,
-    fontFamily: "'DM Sans', sans-serif",
-  },
-  modalCanvas: {
-    width: "100%",
-    height: 280,
-    background: "#1c341c",
-    display: "block",
-  },
-  modalInfo: {
-    padding: "16px 20px 20px",
-  },
-  modalTitle: {
-    fontSize: 17,
-    fontWeight: 600,
-    color: TEXT,
-    letterSpacing: "-0.03em",
-  },
-  modalMeta: {
-    fontSize: 13,
-    color: TEXT,
-    marginTop: 4,
-    letterSpacing: "-0.03em",
-  },
-  modalActions: {
-    display: "flex",
-    gap: 10,
-    marginTop: 16,
-  },
-  btnPrimary: {
-    flex: 1,
-    height: 44,
-    borderRadius: 999,
-    border: "none",
-    background: ACCENT,
-    color: BG,
-    fontSize: 14,
-    fontWeight: 600,
-    fontFamily: "'DM Sans', sans-serif",
-    cursor: "pointer",
-    letterSpacing: "-0.03em",
-  },
-  btnSecondary: {
-    height: 44,
-    padding: "0 20px",
-    borderRadius: 999,
-    border: "1px solid rgba(170,204,187,0.15)",
-    background: "transparent",
-    color: TEXT,
-    fontSize: 14,
-    fontWeight: 500,
-    fontFamily: "'DM Sans', sans-serif",
-    cursor: "pointer",
-    letterSpacing: "-0.03em",
   },
 };
 
@@ -454,116 +366,9 @@ function PinchTitle() {
   );
 }
 
-function AboutOverlay({ onClose }: { onClose: () => void }) {
-  return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 60,
-        backgroundColor: BG,
-        backgroundImage: MESH,
-        backgroundSize: "40px 40px",
-        overflowY: "auto",
-        display: "flex",
-        flexDirection: "column",
-        padding: "72px 48px 48px",
-        maxWidth: 680,
-      }}
-    >
-      <div style={{ flex: 1, fontFamily: "'DM Mono', monospace", fontSize: 14, lineHeight: 1.75, color: TEXT, display: "flex", flexDirection: "column", gap: 0 }}>
-        <p style={{ marginBottom: "1.5em", letterSpacing: "-0.03em" }}>
-          Builders get feedback on the idea, the pitch, the UI. Rarely on the
-          workflow: whether the steps connect, whether users can get from A to
-          B without hitting a wall.
-        </p>
-        <p style={{ marginBottom: "1.5em", letterSpacing: "-0.03em" }}>
-          A screen can look right and still send users in circles. Pages that
-          don&apos;t connect, flows with no exit, steps that assume context the
-          user never had. These aren&apos;t design bugs, but structure bugs: hidden
-          until one maps it.
-        </p>
-        <p style={{ marginBottom: "1.5em", letterSpacing: "-0.03em" }}>
-          There are tools helping you enhance your idea. Tools helping you
-          enhance your pitch. Who is helping you{" "}
-          <a href="#" style={{ color: ACCENT, textDecoration: "underline" }}>
-            enhance
-          </a>{" "}
-          your workflow?
-        </p>
-        <p style={{ marginBottom: "2.5em", letterSpacing: "-0.03em" }}>
-          navGraph turns your app into a graph and answers those questions:
-          specific recommendations, before you write a single line of code.
-          Not a side project, but a helping hand to ensure your project works.
-        </p>
-
-        {/* Color dots */}
-        <div style={{ display: "flex", gap: 10, marginBottom: "2em" }}>
-          {["#e74c3c", "#f0a500", "#3b82f6", "#27ae60"].map((color) => (
-            <div
-              key={color}
-              style={{ width: 22, height: 22, borderRadius: "50%", backgroundColor: color, flexShrink: 0 }}
-            />
-          ))}
-        </div>
-
-        {/* Buttons */}
-        <div style={{ display: "flex", gap: 12, marginBottom: "2.5em", flexWrap: "wrap" }}>
-          {[
-            { label: "CLOSE", onClick: onClose, href: undefined },
-            { label: "X", onClick: undefined, href: "https://x.com" },
-            { label: "LINKEDIN", onClick: undefined, href: "https://linkedin.com" },
-          ].map(({ label, onClick, href }) => {
-            const sharedStyle: CSSProperties = {
-              height: 40,
-              padding: "0 20px",
-              borderRadius: 999,
-              border: `1px solid rgba(170,204,187,0.3)`,
-              background: "transparent",
-              color: TEXT,
-              fontSize: 12,
-              fontFamily: "'DM Mono', monospace",
-              letterSpacing: "-0.03em",
-              cursor: "pointer",
-              display: "inline-flex",
-              alignItems: "center",
-              textDecoration: "none",
-            };
-            return href ? (
-              <a key={label} href={href} target="_blank" rel="noopener noreferrer" style={sharedStyle}>
-                {label}
-              </a>
-            ) : (
-              <button key={label} style={sharedStyle} onClick={onClick}>
-                {label}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Footer */}
-        <p style={{ fontSize: 12, fontFamily: "'DM Mono', monospace", letterSpacing: "-0.03em", color: TEXT, textTransform: "uppercase" }}>
-          this is an open source{" "}
-          <a
-            href="https://github.com/waseem091/pinch"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ color: "inherit", textDecoration: "none" }}
-            onMouseEnter={e => (e.currentTarget.style.textDecoration = "underline")}
-            onMouseLeave={e => (e.currentTarget.style.textDecoration = "none")}
-          >
-            project
-          </a>
-        </p>
-      </div>
-    </div>
-  );
-}
-
 export default function Home() {
   const [tab, setTab] = useState<Tab>("bounties");
-  const [selected, setSelected] = useState<Item | null>(null);
-  const [showAbout, setShowAbout] = useState(false);
+  const aboutRef = useRef<HTMLElement>(null);
   const btnBounties = useRef<HTMLButtonElement>(null);
   const btnSideQuests = useRef<HTMLButtonElement>(null);
   const pillRef = useRef<HTMLDivElement>(null);
@@ -591,10 +396,20 @@ export default function Home() {
     <div style={s.page}>
       {/* Header */}
       <header style={s.header}>
-        <button style={s.infoBtn} aria-label="Info" onClick={() => setShowAbout(true)}>?</button>
+        <button
+          style={s.infoBtn}
+          aria-label="Info"
+          onClick={() => aboutRef.current?.scrollIntoView({ behavior: "smooth" })}
+          onMouseEnter={e => { e.currentTarget.style.background = TEXT; e.currentTarget.style.color = BG; e.currentTarget.style.borderColor = TEXT; }}
+          onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = TEXT; e.currentTarget.style.borderColor = "rgba(170,204,187,0.25)"; }}
+        >?</button>
         {process.env.NEXT_PUBLIC_PRIVY_APP_ID && process.env.NEXT_PUBLIC_PRIVY_APP_ID !== "your-privy-app-id-here"
           ? <UserPill action={{ type: "connectWallet" }} />
-          : <button style={s.connectBtn}>Connect Wallet</button>
+          : <button
+              style={s.connectBtn}
+              onMouseEnter={e => { e.currentTarget.style.background = TEXT; e.currentTarget.style.color = BG; e.currentTarget.style.borderColor = TEXT; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = TEXT; e.currentTarget.style.borderColor = "rgba(170,204,187,0.25)"; }}
+            >CONNECT WALLET</button>
         }
       </header>
 
@@ -614,6 +429,8 @@ export default function Home() {
             ref={btnBounties}
             style={{ ...s.tabBtn, color: tab === "bounties" ? BG : TEXT, background: tab === "bounties" && !pillStyle.width ? ACCENT : "transparent" }}
             onClick={() => setTab("bounties")}
+            onMouseEnter={e => { if (tab !== "bounties") e.currentTarget.style.outlineColor = "rgba(170,204,187,0.45)"; }}
+            onMouseLeave={e => { e.currentTarget.style.outlineColor = "transparent"; }}
           >
             Bounties
           </button>
@@ -621,6 +438,8 @@ export default function Home() {
             ref={btnSideQuests}
             style={{ ...s.tabBtn, color: tab === "sidequests" ? BG : TEXT, background: tab === "sidequests" && !pillStyle.width ? ACCENT : "transparent" }}
             onClick={() => setTab("sidequests")}
+            onMouseEnter={e => { if (tab !== "sidequests") e.currentTarget.style.outlineColor = "rgba(170,204,187,0.45)"; }}
+            onMouseLeave={e => { e.currentTarget.style.outlineColor = "transparent"; }}
           >
             Side Quests
           </button>
@@ -641,36 +460,105 @@ export default function Home() {
                 <div style={s.cardLabel}>{item.id}</div>
                 <div style={s.cardAmount}>💰{item.amount}</div>
               </div>
-              <button style={s.startBtn} onClick={() => setSelected(item)}>Start</button>
+              <button style={s.startBtn}>Start</button>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Modal */}
-      {selected && (
-        <div style={s.overlay} onClick={() => setSelected(null)}>
-          <div style={s.modal} onClick={e => e.stopPropagation()}>
-            <button style={s.modalClose} onClick={() => setSelected(null)}>✕</button>
-            <div style={s.modalCanvas}>
-              <GlassesViewer />
-            </div>
-            <div style={s.modalInfo}>
-              <div style={s.modalTitle}>{selected.label}</div>
-              <div style={s.modalMeta}>{selected.id} · {selected.amount}</div>
-              <div style={s.modalActions}>
-                <button style={s.btnPrimary}>
-                  Accept {tab === "bounties" ? "Bounty" : "Quest"}
-                </button>
-                <button style={s.btnSecondary} onClick={() => setSelected(null)}>Pass</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* About */}
+      <section
+        ref={aboutRef}
+        style={{
+          maxWidth: 620,
+          margin: "0 auto",
+          padding: "96px 24px 80px",
+          fontFamily: "'DM Mono', monospace",
+          fontSize: 14,
+          lineHeight: 1.85,
+          color: TEXT,
+        }}
+      >
+        <p style={{ marginBottom: "1.5em" }}>
+          Autonomous agents are good at operating independently. Until they
+          hit something they can&apos;t resolve — a physical edge case, an
+          environment they haven&apos;t seen, a decision that needs a human
+          in the loop. Most systems stop there.
+        </p>
+        <p style={{ marginBottom: "1.5em" }}>
+          Pinch doesn&apos;t stop. When a robot hits a limit, it posts a bounty
+          from its own wallet. A human claims it, opens a browser, and takes
+          control — hand tracking over WebXR drives the robot live. Once the
+          blockage clears, the robot pays out instantly, settled onchain. No
+          card, no bank, no intermediary.
+        </p>
+        <p style={{ marginBottom: "1.5em" }}>
+          There are systems built for agents to talk to agents. Systems built
+          for humans to talk to agents. Who is building the layer where{" "}
+          <a
+            href="#"
+            style={{ color: ACCENT, textDecoration: "underline", cursor: "pointer" }}
+            onClick={e => { e.preventDefault(); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+          >
+            agents pay humans
+          </a>{" "}
+          for physical presence?
+        </p>
+        <p style={{ marginBottom: "2.5em" }}>
+          Pinch is that layer: real-time hand tracking as the input primitive
+          for an agentic economy. A robot posts a bounty, a human shows up,
+          a transaction clears — presence-native, verified, committed onchain
+          the moment the job is done.
+        </p>
 
-      {/* About overlay */}
-      {showAbout && <AboutOverlay onClose={() => setShowAbout(false)} />}
+        {/* Buttons */}
+        <div style={{ display: "flex", gap: 12, marginBottom: "2.5em", flexWrap: "wrap" }}>
+          {[
+            { label: "GITHUB", href: "https://github.com/waseem091/pinch" },
+            { label: "X", href: "https://x.com/waseemweb" },
+          ].map(({ label, href }) => {
+            return (
+              <a
+                key={label}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  height: 40,
+                  padding: "0 20px",
+                  borderRadius: 999,
+                  border: "1px solid rgba(170,204,187,0.25)",
+                  background: "transparent",
+                  color: TEXT,
+                  fontSize: 12,
+                  fontFamily: "'DM Mono', monospace",
+                  letterSpacing: "-0.03em",
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  textDecoration: "none",
+                  transition: "background .15s, color .15s, border-color .15s",
+                }}
+                onMouseEnter={e => {
+                  const el = e.currentTarget;
+                  el.style.background = TEXT;
+                  el.style.color = BG;
+                  el.style.borderColor = TEXT;
+                }}
+                onMouseLeave={e => {
+                  const el = e.currentTarget;
+                  el.style.background = "transparent";
+                  el.style.color = TEXT;
+                  el.style.borderColor = "rgba(170,204,187,0.25)";
+                }}
+              >
+                {label}
+              </a>
+            );
+          })}
+        </div>
+
+      </section>
     </div>
   );
 }

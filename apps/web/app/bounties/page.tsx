@@ -1,4 +1,17 @@
-import type { Bounty } from "@pinch/protocol";
+type BountyKind = "intervention" | "training";
+type BountyStatus = "open" | "claimed" | "completed" | "cancelled";
+
+interface Bounty {
+  id: string;
+  robotId: string;
+  kind: BountyKind;
+  status: BountyStatus;
+  reward: bigint;
+  description: string;
+  createdAt: number;
+  claimedBy?: string;
+  completedAt?: number;
+}
 
 // TODO: fetch from API
 const mockBounties: Bounty[] = [

@@ -3,15 +3,11 @@
   "private": true,
   "packageManager": "npm@11.16.0",
   "scripts": {
-    "dev": "turbo dev",
-    "build": "turbo build",
-    "lint": "turbo lint"
-  },
-  "devDependencies": {
-    "turbo": "latest"
+    "dev": "npm run dev --workspace=apps/web",
+    "build": "npm run build --workspace=apps/web",
+    "lint": "npm run lint --workspace=apps/web"
   },
   "workspaces": [
-    "apps/*",
-    "packages/*"
+    "apps/web"
   ]
 }

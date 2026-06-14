@@ -1,0 +1,13 @@
+{
+  "name": "pinch",
+  "private": true,
+  "packageManager": "npm@11.16.0",
+  "scripts": {
+    "dev": "npm run dev --workspace=apps/web",
+    "build": "npm run build --workspace=apps/web",
+    "lint": "npm run lint --workspace=apps/web"
+  },
+  "workspaces": [
+    "apps/web"
+  ]
+}

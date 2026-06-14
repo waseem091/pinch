@@ -1,13 +1,9 @@
 {
   "version": 2,
   "name": "pinch",
-  "buildCommand": "npm run build",
-  "outputDirectory": "public",
-  "routes": [
-    { "handle": "filesystem" },
-    { "src": "/bounties(.*)", "dest": "/bounties/index.html" },
-    { "src": "/(.*)",         "dest": "/index.html" }
-  ],
+  "buildCommand": "cd apps/web && npm install && npm run build",
+  "outputDirectory": "apps/web/.next",
+  "framework": "nextjs",
   "headers": [
     {
       "source": "/(.*)",

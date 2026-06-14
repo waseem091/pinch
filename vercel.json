@@ -1,16 +1,4 @@
 {
   "version": 2,
-  "name": "pinch",
-  "buildCommand": "npm install && npm run build",
-  "outputDirectory": ".next",
-  "framework": "nextjs",
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
-        { "key": "Permissions-Policy", "value": "xr-spatial-tracking=*" }
-      ]
-    }
-  ]
+  "name": "pinch"
 }

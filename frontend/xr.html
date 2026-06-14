@@ -305,7 +305,8 @@ renderer.setAnimationLoop((time, frame) => {
   lastHandCounts.left  = payload.left  ? payload.left.n  : 0;
   lastHandCounts.right = payload.right ? payload.right.n : 0;
 
-  if (anyTracked) sendHandData({ ...payload, robotId: ROBOT_ID });
+  // Always transmit every frame — robot control must not depend on hands being visible
+  sendHandData({ ...payload, robotId: ROBOT_ID });
 });
 </script>
 </body>

@@ -20,6 +20,10 @@ const CORS = {
 const WORLD_VERIFY_URL = 'https://developer.worldcoin.org/api/v2/verify';
 const WORLD_ACTION     = 'claim-bounty';
 
+const ROBOT_API          = 'https://pinch-ie4r.onrender.com';
+const HAND_RANGE         = 0.35;  // metres each side → full 0-180 servo travel
+const CONTROL_INTERVAL   = 100;   // ms between robot control POSTs (max 10 fps)
+
 export class Relay {
   constructor(state, env) {
     this.state = state;
@@ -110,10 +114,57 @@ export class Relay {
 
   webSocketMessage(ws, message) {
     if (typeof message !== 'string') return;
+    // Relay to all other connected clients (viewer, monitors, etc.)
     for (const peer of this.state.getWebSockets()) {
       if (peer !== ws) try { peer.send(message); } catch {}
     }
+    // Forward hand tracking data to robot control endpoint
+    this._forwardHandControl(message);
   }
+
+  _forwardHandControl(rawMsg) {
+    let frame;
+    try { frame = JSON.parse(rawMsg); } catch { return; }
+
+    // Skip heartbeat / status messages
+    if (frame.type === 'status') return;
+
+    // Throttle: max CONTROL_INTERVAL ms between POSTs
+    const now = Date.now();
+    if (this._lastControl && now - this._lastControl < CONTROL_INTERVAL) return;
+    this._lastControl = now;
+
+    // Update pan/tilt from wrist position when hands are visible
+    const hand = frame.right || frame.left;
+    if (hand?.joints?.[0]?.pos) {
+      const [x, y] = hand.joints[0].pos;
+      const clamp = v => Math.max(0, Math.min(180, Math.round(v)));
+      this._lastPan  = clamp(90 + (x / HAND_RANGE) * 90);
+      this._lastTilt = clamp(90 + (y / HAND_RANGE) * 90);
+    }
+
+    // Always forward — hold last known position when hands aren't visible.
+    // This keeps the robot continuously receiving commands regardless of
+    // whether an object is in front of the camera or hands are in frame.
+    if (this._lastPan === undefined) return; // no position established yet
+
+    const controlMsg = { type: 'control', pan: this._lastPan, tilt: this._lastTilt };
+
+    // Path 1: REST endpoint (robot polls this when active)
+    fetch(`${ROBOT_API}/api/control`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(controlMsg),
+    }).catch(() => {});
+
+    // Path 2: broadcast control message over WebSocket relay so the robot
+    // receives it directly regardless of whether a bounty is active
+    const msg = JSON.stringify(controlMsg);
+    for (const peer of this.state.getWebSockets()) {
+      try { peer.send(msg); } catch {}
+    }
+  }
+
   webSocketClose(ws) { try { ws.close(); } catch {} }
   webSocketError(ws)  { try { ws.close(); } catch {} }
 }

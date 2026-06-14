@@ -2,6 +2,9 @@ name = "pinch-relay"
 main = "worker.js"
 compatibility_date = "2026-01-01"
 
+[vars]
+WORLD_APP_ID = "app_f13f3bcdd8e5b2bb1eca815e8e462cf1"
+
 [[durable_objects.bindings]]
 name = "RELAY"
 class_name = "Relay"

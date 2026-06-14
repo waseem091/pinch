@@ -25,6 +25,24 @@ interface Item {
   label: string;
   time: string;
   img?: string;
+  imageUrl?: string;
+  status?: string;
+}
+
+const FALLBACK_IMGS = [
+  "/assets/robots/robo1.webp",
+  "/assets/robots/robo2.webp",
+  "/assets/robots/robo3.webp",
+  "/assets/robots/robo4.webp",
+  "/assets/robots/robo5.webp",
+  "/assets/robots/robo6.webp",
+];
+
+function timeAgo(iso: string) {
+  const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+  if (s < 60)   return `${s}s ago`;
+  if (s < 3600) return `${Math.floor(s / 60)}m ago`;
+  return `${Math.floor(s / 3600)}h ago`;
 }
 
 const BOUNTIES: Item[] = [
@@ -395,7 +413,7 @@ export default function Home() {
   const [tab, setTab]               = useState<Tab>("bounties");
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [verified, setVerified]     = useState(false);
-  const [quests, setQuests]         = useState<Quest[]>([]);
+  const [bounties, setBounties]     = useState<Item[]>([]);
   const [claiming, setClaiming]     = useState<Record<string, boolean>>({});
   const [toast, setToast]           = useState("");
   const [toastVisible, setToastVisible] = useState(false);
@@ -419,16 +437,6 @@ export default function Home() {
     toastTimer.current = setTimeout(() => setToastVisible(false), ms);
   }, []);
 
-  // Restore wallet if already connected
-  useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const eth = (window as any).ethereum;
-    if (!eth) return;
-    eth.request({ method: "eth_accounts" }).then((accounts: string[]) => {
-      if (accounts[0]) setWalletAddress(accounts[0]);
-    });
-  }, []);
-
   const connectWallet = useCallback(async (): Promise<string | null> => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const eth = (window as any).ethereum;
@@ -448,27 +456,27 @@ export default function Home() {
     } catch (err) { console.error("wallet connect failed", err); return null; }
   }, [showToast]);
 
-  const fetchQuests = useCallback(async () => {
-    try {
-      const r = await fetch(`${API}/api/quests`);
-      if (!r.ok) return;
-      setQuests(await r.json());
-    } catch { /* API unreachable — keep current state */ }
-  }, []);
-
-  useEffect(() => { fetchQuests(); }, [fetchQuests]);
-
-  // SSE for real-time bounty updates
   useEffect(() => {
-    let es: EventSource;
-    const connect = () => {
-      es = new EventSource(`${API}/api/events`);
-      es.onmessage = () => fetchQuests();
-      es.onerror   = () => { es.close(); setTimeout(connect, 4000); };
+    const load = async () => {
+      try {
+        const r = await fetch(`${API}/api/quests`);
+        if (!r.ok) return;
+        const data: Quest[] = await r.json();
+        const byName: Record<string, Quest> = {};
+        for (const q of data) byName[q.name.toLowerCase()] = q;
+        setBounties(
+          BOUNTIES.map((b) => {
+            const q = byName[b.name.toLowerCase()];
+            if (!q) return b;
+            return { ...b, amount: `${q.bounty} HBAR`, label: q.status, time: timeAgo(q.postedAt), status: q.status };
+          })
+        );
+      } catch { /* API unreachable — keep current state */ }
     };
-    connect();
-    return () => es?.close();
-  }, [fetchQuests]);
+    load();
+    const t = setInterval(load, 10000);
+    return () => clearInterval(t);
+  }, []);
 
   async function doClaim(id: string, addr: string) {
     setClaiming(c => ({ ...c, [id]: true }));
@@ -481,7 +489,6 @@ export default function Home() {
       const d = await r.json();
       if (!r.ok || d.error) throw new Error(d.error || String(r.status));
       showToast("Bounty claimed! You'll be paid in HBAR when the robot is freed ✓");
-      fetchQuests();
     } catch (e: unknown) {
       showToast("Claim failed: " + (e as Error).message, 4000);
     } finally {
@@ -499,8 +506,8 @@ export default function Home() {
         body: JSON.stringify(proof),
       });
       if (!res.ok) {
-        const d = await res.json().catch(() => ({}));
-        throw new Error((d as { detail?: string }).detail || "Verification rejected");
+        const d = await res.json().catch(() => ({})) as { detail?: string; error?: string };
+        throw new Error(d.detail || d.error || "Verification rejected");
       }
     } catch (e: unknown) {
       showToast("World ID verification failed: " + (e as Error).message, 4000);
@@ -543,16 +550,8 @@ export default function Home() {
     setCardStates(s => ({ ...s, [itemId]: 'claimable' }));
   }
 
-  function handleClaimClick(itemId: string) {
-    setCardStates(s => ({ ...s, [itemId]: 'claimed' }));
-    setHoveredCard(null);
-  }
-
-  function timeAgo(iso: string) {
-    const sec = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
-    if (sec < 60)   return `${sec}s ago`;
-    if (sec < 3600) return `${Math.floor(sec / 60)}m ago`;
-    return `${Math.floor(sec / 3600)}h ago`;
+  function handleClaimClick(_itemId: string) {
+    window.open("https://pinch-bounty.vercel.app/bounties", "_blank");
   }
 
   useLayoutEffect(() => {
@@ -571,7 +570,7 @@ export default function Home() {
     }
   }, [tab]);
 
-  const staticItems = tab === "bounties" ? BOUNTIES : SIDE_QUESTS;
+  const staticItems = tab === "bounties" ? bounties : SIDE_QUESTS;
 
   return (
     <div style={s.page}>
@@ -697,7 +696,7 @@ export default function Home() {
             <div key={item.id} style={{ ...s.card, background: cardBg, position: 'relative' }}>
               <div style={{ ...s.cardImg }}>
                 <img
-                  src={item.img ?? `/assets/robots/${item.id}.webp`}
+                  src={item.img ?? item.imageUrl ?? `/assets/robots/${item.id}.webp`}
                   alt={item.id}
                   style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                 />
